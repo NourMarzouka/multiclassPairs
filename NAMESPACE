@@ -1,0 +1,42 @@
+#import(BiocManager)
+import(Biobase)
+import(switchBox)
+import(dunn.test)
+import(ranger)
+import(Boruta)
+import(stats)
+import(utils)
+
+importFrom("methods", "hasArg")
+# importFrom("stats", "complete.cases")
+# importFrom("stats", "ave")
+# importFrom("stats", "predict")
+# importFrom("utils", "combn")
+# importFrom("utils", "capture.output")
+
+# main object
+S3method(print, multiclassPairs_object)
+
+# SB objects
+S3method(print, OnevsrestScheme_genes_TSP)
+S3method(print, OnevsrestScheme_TSP)
+
+# RF objects
+S3method(print, RandomForest_sorted_genes)
+S3method(print, RandomForest_sorted_rules)
+S3method(print, rule_based_RandomForest)
+
+#exportPattern("^[[:alpha:]]+")
+export("ReadData")
+
+export("filter_genes_TSP")
+export("train_one_vs_rest_TSP")
+export("predict_one_vs_rest_TSP")
+
+export("sort_rules_RF")
+export("sort_genes_RF")
+export("train_RF")
+export("predict_RF")
+
+# exportPattern("^[[:alpha:]]+")
+# exportPattern("^[^\\.]")
