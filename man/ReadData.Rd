@@ -12,7 +12,8 @@ ReadData(Data, Labels, Platform = NULL, verbose = TRUE)
 
 \arguments{
   \item{Data}{
-a dataframe, matrix, or ExpressionSet with values to be used in the down stream analysis. Samples as columns  and rows genes/features as rows. Matrix should has column names and row names.}
+a dataframe, matrix, or ExpressionSet with values to be used in the down stream analysis. Samples as columns  and rows genes/features as rows. Matrix should has column names and row names. It is recommended to avoid "-" symbol for the feature/gene names.
+}
   \item{Labels}{
 a vector indicating the classes of the samples.
 Should be with the same length of the columns number in data.

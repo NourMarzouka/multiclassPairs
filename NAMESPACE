@@ -6,6 +6,7 @@ import(ranger)
 import(Boruta)
 import(stats)
 import(utils)
+import(graphics)
 
 importFrom("methods", "hasArg")
 # importFrom("stats", "complete.cases")
@@ -37,6 +38,9 @@ export("sort_rules_RF")
 export("sort_genes_RF")
 export("train_RF")
 export("predict_RF")
+
+export("plot_binary_TSP")
+export("plot_binary_RF")
 
 # exportPattern("^[[:alpha:]]+")
 # exportPattern("^[^\\.]")

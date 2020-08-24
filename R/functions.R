@@ -130,7 +130,7 @@ ReadData <- function(Data,
     Platform_tmp <- NULL
   }
 
-  ####
+  ###
   # Remove genes with NAs in all samples
   remove_na <- rowSums(is.na(Data_tmp)) == ncol(Data_tmp)
 
@@ -165,8 +165,8 @@ ReadData <- function(Data,
 
     if (!is.null(Platform)) {
       message(capture.output(cat("Platforms/studies:",
-                             unique(Platform_tmp),
-                             fill = TRUE)))
+                                 unique(Platform_tmp),
+                                 fill = TRUE)))
     } else {
       message("Platforms/studies: NULL")
     }
@@ -218,11 +218,11 @@ do_dunn_test <- function(data,
 
 # function to filter gene for SB
 filter_genes_TSP <- function(data_object,
-                            filter = c("one_vs_one", "one_vs_rest"),
-                            platform_wise = FALSE,
-                            featureNo = 1000,
-                            UpDown = TRUE,
-                            verbose = TRUE) {
+                             filter = c("one_vs_one", "one_vs_rest"),
+                             platform_wise = FALSE,
+                             featureNo = 1000,
+                             UpDown = TRUE,
+                             verbose = TRUE) {
 
   # check the data_object class
   if (class(data_object)[1] != "multiclassPairs_object") {
@@ -338,7 +338,7 @@ filter_genes_TSP <- function(data_object,
       filtered_genes[[i]] <- SWAP.Filter.Wilcoxon(
         inputMat = as.matrix(D),
         phenoGroup = group_TSP(label = L,
-                              my_group = i),
+                               my_group = i),
         featureNo = featureNo,
         UpDown = UpDown)
     }
@@ -383,7 +383,7 @@ filter_genes_TSP <- function(data_object,
         }
         # check if this class is there in this platform or not
         tmp_check <- as.character(group_TSP(label = L[plat_samples],
-                                           my_group = i))
+                                            my_group = i))
 
         if (length(unique(tmp_check)) == 1) {
           message("skip class ",i," for platform ",y)
@@ -397,7 +397,7 @@ filter_genes_TSP <- function(data_object,
         plat_genes[[y]][[i]] <- SWAP.Filter.Wilcoxon(
           inputMat = as.matrix(D[,plat_samples]),
           phenoGroup = group_TSP(label = L[plat_samples],
-                                my_group = i),
+                                 my_group = i),
           featureNo = nrow(D),
           UpDown = UpDown)
 
@@ -537,7 +537,7 @@ filter_genes_TSP <- function(data_object,
     df$Z       <- Z
     rm(p_value, Z)
 
-    ####
+    ###
     # sort based on the p-value
     tmp <- df
     tmp <- tmp[order(tmp$p_value, decreasing = FALSE),]
@@ -750,7 +750,7 @@ filter_genes_TSP <- function(data_object,
       df$Z       <- Z
       rm(p_value, Z)
 
-      ####
+      ###
       # sort based on the p-value
       df <- df[order(df$p_value, decreasing = FALSE),]
       plat_genes[[y]] <- df
@@ -892,15 +892,15 @@ filter_genes_TSP <- function(data_object,
 
 # train one vs rest scheme using SB
 train_one_vs_rest_TSP <- function(data_object,
-                                 filtered_genes,
-                                 k_range=2:50,
-                                 include_pivot=FALSE,
-                                 one_vs_one_scores=FALSE,
-                                 platform_wise_scores=FALSE,
-                                 seed=NULL,
-                                 classes,
-                                 SB_arg = list(),
-                                 verbose = TRUE) {
+                                  filtered_genes,
+                                  k_range=2:50,
+                                  include_pivot=FALSE,
+                                  one_vs_one_scores=FALSE,
+                                  platform_wise_scores=FALSE,
+                                  seed=NULL,
+                                  classes,
+                                  SB_arg = list(),
+                                  verbose = TRUE) {
 
   # check the data_object class
   if (class(data_object)[1] != "multiclassPairs_object") {
@@ -951,7 +951,7 @@ train_one_vs_rest_TSP <- function(data_object,
 
     # check if all classes are in the classifier object
     if (any(!classes %in% unique(L))) {
-      message("These classes are not found the data object:")
+      message("These classes are not found in the data object:")
       message(classes[!classes %in% unique(L)])
       stop("classes argument must contain similar names to labels in data object!")
     }
@@ -992,8 +992,10 @@ train_one_vs_rest_TSP <- function(data_object,
     # get the filtered gene
     genes_cl <- genes[[cl]]
 
-    #### include pivot or not
-    message("Pairing genes...")
+    ### include pivot or not
+    if (verbose){
+      message("Pairing genes...")
+    }
 
     if (include_pivot) {
       # restricted_pairs
@@ -1040,7 +1042,7 @@ train_one_vs_rest_TSP <- function(data_object,
     }
 
 
-    #### score calculations
+    ### score calculations
     if (verbose) {
       message("Score calculations...")
     }
@@ -1050,7 +1052,7 @@ train_one_vs_rest_TSP <- function(data_object,
         inputMat1  = as.matrix(D),
         phenoGroup = group_TSP(L, cl),
         RestrictedPairs = restricted_pairs,
-        verbose = TRUE)
+        verbose = verbose)
     }
 
 
@@ -1080,7 +1082,7 @@ train_one_vs_rest_TSP <- function(data_object,
           inputMat1  = as.matrix(tmp_D),
           phenoGroup = group_TSP(tmp_L, cl),
           RestrictedPairs = restricted_pairs,
-          verbose = TRUE)
+          verbose = verbose)
 
         plat_scores[[ss]] <- tmp$score
       }
@@ -1123,7 +1125,7 @@ train_one_vs_rest_TSP <- function(data_object,
           inputMat1  = as.matrix(tmp_D),
           phenoGroup = group_TSP(tmp_L, cl),
           RestrictedPairs = restricted_pairs,
-          verbose = TRUE)
+          verbose = verbose)
 
         groups_scores[[cl2]] <- tmp$score
       }
@@ -1171,7 +1173,7 @@ train_one_vs_rest_TSP <- function(data_object,
             inputMat1  = as.matrix(tmp_D),
             phenoGroup = group_TSP(tmp_L, cl),
             RestrictedPairs = restricted_pairs,
-            verbose = TRUE)
+            verbose = verbose)
 
           groups_scores[[counter]] <- tmp$score
           counter <- counter + 1
@@ -1189,7 +1191,7 @@ train_one_vs_rest_TSP <- function(data_object,
       final_scores$score <- rowMeans(sapply(groups_scores, unlist))
     }
 
-    #### the fake function to input the calculated scores
+    ### the fake function to input the calculated scores
     tmp_score_fun <- function(phenoGroup, inputMat1, ...) {
       return(final_scores)
     }
@@ -1216,11 +1218,11 @@ train_one_vs_rest_TSP <- function(data_object,
 
 # predict the classes based on one vs rest  switchBox classifier
 predict_one_vs_rest_TSP <- function(classifier,
-                                   Data,
-                                   tolerate_missed_genes = TRUE,
-                                   weighted_votes = TRUE,
-                                   classes,
-                                   verbose = TRUE) {
+                                    Data,
+                                    tolerate_missed_genes = TRUE,
+                                    weighted_votes = TRUE,
+                                    classes,
+                                    verbose = TRUE) {
 
   # check the object class
   if (!class(Data)[1] %in% c("multiclassPairs_object",
@@ -1257,7 +1259,7 @@ predict_one_vs_rest_TSP <- function(classifier,
     D <- as.matrix(exprs(Data))
   }
 
-  if (class(Data)  ==  "multiclassPairs_object") {
+  if (class(Data)[1]  ==  "multiclassPairs_object") {
     D <- Data$data$Data
     #D <- object$data$Data
   }
@@ -1267,7 +1269,7 @@ predict_one_vs_rest_TSP <- function(classifier,
 
     # check if all classes are in the classifier object
     if (any(!classes %in% names(classifier[["classifiers"]]))) {
-      message("These names are not found the classifier object:")
+      message("These names are not found in the classifier object:")
       message(classes[!classes %in% names(classifier[["classifiers"]])])
       stop("classes names in classes argument should be similar to the names of the classifiers in classifier object!")
     }
@@ -1351,7 +1353,7 @@ predict_one_vs_rest_TSP <- function(classifier,
   if (verbose) {
     if (sum(first != last)>0) {
       message(paste("Score ties found in",sum(first != last),
-                "out of",ncol(D),"samples in the data"))
+                    "out of",ncol(D),"samples in the data"))
       if (!weighted_votes) {
         message("Turning weighted_votes to TRUE may help to get less ties!")
 
@@ -1360,9 +1362,672 @@ predict_one_vs_rest_TSP <- function(classifier,
       message("No ties found")
     }
   }
+
+  class(scores_df) <- c(class(scores_df), "OneVsRestTSP prediction")
   return(scores_df)
 }
 
+# plot binary for classifier based on one vs rest scheme - switchBox
+plot_binary_TSP <- function(Data,
+                            classifier,
+                            ref = NULL,
+                            prediction = NULL,
+                            platform = NULL,
+                            classes = NULL,
+                            platforms_ord = NULL,
+                            top_anno = c("ref", "prediction", "platform")[1],
+                            title = "",
+                            binary_col = c("white", "black", "gray"),
+                            ref_col = NULL,
+                            pred_col = NULL,
+                            platform_col = NULL,
+                            show_ref = TRUE,
+                            show_predictions = TRUE,
+                            show_platform = TRUE,
+                            show_scores = TRUE,
+                            show_rule_name = TRUE,
+                            legend = TRUE,
+                            cluster_cols = TRUE,
+                            cluster_rows = TRUE,
+                            anno_height = 0.03,
+                            score_height = 0.03,
+                            margin = c(0, 5, 0, 5)) {
+
+
+  ### get classifier ###
+  # check classifier object
+  if (class(classifier)[1] != "OnevsrestScheme_TSP") {
+    stop("classifier should be OnevsrestScheme_TSP object from train_one_vs_rest_TSP function!")
+  } else {
+    C <- classifier
+  }
+
+
+  ### get data ###
+  # check the object class
+  if (!class(Data)[1] %in% c("multiclassPairs_object", "ExpressionSet",
+                             "data.frame", "matrix")) {
+    stop("Data should be class:
+  matrix/data.frame/ExpressionSet/multiclassPairs_object from ReadData function!")
+  }
+
+  # get the data matrix
+  if (is.data.frame(Data)) {
+    D <- Data
+  }
+
+  if (is.matrix(Data)) {
+    D <- as.data.frame(Data, stringsAsFactors = FALSE)
+  }
+
+  # if the input Data is ExpressionSet object
+  if (class(Data)[1] == "ExpressionSet") {
+    # extract the expression matrix from the ExpressionSet
+    D <- as.matrix(exprs(Data))
+  }
+
+  if (class(Data)[1] == "multiclassPairs_object") {
+    D <- Data$data$Data
+  }
+
+  # check if rownames is not NULL to avoid error later
+  if (is.null(rownames(D))) {
+    stop("Provide feature/gene names as rownames in the Data matrix!")
+  }
+
+  ### get classes ###
+  if (!is.null(classes)) {
+    # check if all classes are in the classifier object
+    if (any(!classes %in% names(classifier[["classifiers"]]))) {
+      message("These classes are not found in the classifier object:")
+      message(paste0(classes[!classes %in% names(classifier[["classifiers"]])],
+                     collapse = " "))
+      stop("classes names in classes argument should be similar to the names of the classifiers in classifier object!")
+    }
+  } else {
+    # get the classes based on the names in the classifier object
+    classes <- names(classifier[["classifiers"]])
+  }
+
+  if (any(!names(classifier[["classifiers"]]) %in% classes)) {
+    message("Because the classes argument miss these classes then these classes will be removed from the heatmap:")
+    message(paste0(names(classifier[["classifiers"]])[!names(classifier[["classifiers"]])
+                                                      %in% classes], collapse = " "))
+
+  }
+
+  ### get ref labels ###
+  # if the data is object
+  if (class(Data)[1] == "multiclassPairs_object") {
+    # get the ref from the object
+    if (is.null(ref)) {
+      L <- Data$data$Labels
+    }
+  }
+
+  # get the input ref Labels from the user
+  if ((is.character(ref) | is.factor(ref)) & class(Data)[1] !=
+      "ExpressionSet") {
+    L <- as.character(ref)
+  }
+
+  # if the input Data is ExpressionSet object
+  if (class(Data)[1] == "ExpressionSet") {
+
+    # extract the Labels - in case it is stored in the
+    # ExpressionSet
+    if (is.character(ref) & length(ref) == 1) {
+      if (ref %in% varLabels(Data)) {
+        L <- as.character(pData(Data)[, ref])
+      } else {
+        message(capture.output(cat("Phenotype data has these variables:",
+                                   varLabels(Data), fill = TRUE)))
+        stop("Ref label variable is not found in the phenotype data of your ExpressionSet")
+      }
+    }
+
+    # get the input Labels vector as it is
+    if ((is.character(ref) | is.factor(ref)) & length(ref) !=
+        1) {
+      L <- as.character(ref)
+    }
+  }
+
+  # check the length of the ref labels
+  if (length(L) != ncol(D) & !is.null(ref)) {
+    message("Number of samples: ", ncol(D))
+    message("Labels length: ", length(L))
+    stop("Labels vector length are not equal to
+       samples in data")
+  }
+
+  # no ref labels if the user did not input ref and the input
+  # is not multiclassPairs_object
+  if (!is.null(ref) & class(Data)[1] != "multiclassPairs_object") {
+    L <- NULL
+  }
+
+
+  ### get Platform labels ###
+  # if the data is object
+  if (class(Data)[1] == "multiclassPairs_object") {
+    # get the platform from the object
+    if (is.null(platform)) {
+      P <- Data$data$Platform
+    }
+  }
+
+  # get the input platform Labels from the user
+  if ((is.character(platform) | is.factor(platform)) & class(Data)[1] !=
+      "ExpressionSet") {
+    P <- as.character(platform)
+  }
+
+  # if the input Data is ExpressionSet object
+  if (class(Data)[1] == "ExpressionSet") {
+
+    # extract the platform label - in case it is stored in the
+    # ExpressionSet
+    if (is.character(platform) & length(platform) == 1) {
+      if (platform %in% varLabels(Data)) {
+        P <- as.character(pData(Data)[, platform])
+      } else {
+        message(capture.output(cat("Phenotype data has these variables:",
+                                   varLabels(Data), fill = TRUE)))
+        stop("Platform/study label variable is not found in the phenotype data of your ExpressionSet")
+      }
+    }
+
+    # get the input Labels vector as it is
+    if ((is.character(platform) | is.factor(platform)) &
+        length(platform) != 1) {
+      P <- as.character(platform)
+    }
+  }
+
+  # check the length of the platform labels
+  if (length(P) != ncol(D) & !is.null(platform)) {
+    message("Number of samples: ", ncol(D))
+    message("Labels length: ", length(P))
+    stop("Platform labels vector length are not equal to
+       samples in data")
+  }
+
+  # no platform labels if the user did not input platform and
+  # the input is not multiclassPairs_object
+  if (!is.null(platform) & class(Data)[1] != "multiclassPairs_object") {
+    P <- NULL
+  }
+
+  ### get platforms_ord ###
+  if (!is.null(platforms_ord) & !is.null(P)) {
+    # check if all platforms are in platforms_ord
+    if (any(!platforms_ord %in% P)) {
+      message("These platform/study in platforms_ord are not in found the platform labels:")
+      message(platforms_ord[!platforms_ord %in% P])
+      stop("platforms_ord argument should have similar names of the platforms/studies in the data!")
+    }
+  } else {
+    # get the platforms_ord based on the names in the classifier
+    # object
+    platforms_ord <- unique(P)
+  }
+
+  ### get prediction ###
+  # check if the prediction df is from the prediction function
+  if (!is.null(prediction) & any(class(prediction) %in% "OneVsRestTSP prediction")) {
+    pred <- prediction
+  } else {
+    pred <- NULL
+  }
+
+  # check the length of the platform labels
+  if (nrow(pred) != ncol(D) & !is.null(prediction)) {
+    message("Number of samples in the data: ", ncol(D))
+    message("Number of samples in the prediction: ", ncol(pred))
+    stop("prediction should be for the same data!
+     Use predict_one_vs_rest_TSP to generate it for this data!")
+  }
+
+  ### checks ###
+  if (is.null(pred) & is.null(L) & is.null(P)) {
+    stop("No available ref, prediction, or platform labels!
+     One of them atleast is needed.")
+  }
+
+  ### checks for top_anno ###
+  # check if the top_anno labels are available
+  if (top_anno == "ref" & is.null(L)) {
+    stop("top annotation (top_anno) is ref while there is no ref labels available!")
+  }
+  if (top_anno == "ref" & !show_ref) {
+    message("show_ref was turned to TRUE because top_anno is 'ref'!")
+  }
+
+  if (top_anno == "prediction" & is.null(pred)) {
+    stop("top annotation (top_anno) is prediction while there is no prediction dataframe available! Use predict_one_vs_rest_TSP function to generate it!")
+  }
+  if (top_anno == "prediction" & !show_predictions) {
+    message("show_predictions was turned to TRUE because top_anno is 'prediction'!")
+  }
+
+  if (top_anno == "platform" & is.null(P)) {
+    stop("top annotation (top_anno) is platform while there is no platform labels available!")
+  }
+  if (top_anno == "platform" & !show_platform) {
+    message("show_platform was turned to TRUE because top_anno is 'platform'!")
+  }
+
+  if (any(!top_anno %in% c("ref", "prediction", "platform")) |
+      !is.character(top_anno) | length(top_anno) != 1) {
+    stop("Top annotation argument should be character with one of these options:
+     ref prediction platform")
+  }
+
+
+  ### title ###
+  if (!is.character(title) | length(title) != 1) {
+    stop("Title argument should be character input!")
+  }
+
+  ### binary heatmap colors ###
+  if (!is.character(binary_col) | length(binary_col) != 3) {
+    stop("binary_col should be character input with length of 3!
+     Three colors are needed for rules with false, true and NAs.
+     By default it is c('white','black','gray')")
+  }
+
+  ### ref anno colors ###
+  if (show_ref & !is.null(L) & !is.null(ref_col)) {
+    if (!is.character(ref_col) | any(!classes %in% names(ref_col))) {
+      stop("ref_col should be named character vector for all classes!")
+    }
+  }
+
+  ### pred anno colors ###
+  if (show_predictions & !is.null(pred) & !is.null(pred_col)) {
+    if (!is.character(pred_col) | any(!classes %in% names(pred_col))) {
+      stop("pred_col should be named character vector for all classes!")
+    }
+  }
+
+  ### platform anno colors ###
+  if (show_platform & !is.null(P) & !is.null(platform_col)) {
+    if (!is.character(platform_col) | any(!P %in% names(platform_col))) {
+      stop("platform_col should be named character vector for all platforms/studies!")
+    }
+  }
+
+  ### colors ###
+  # determine the colors groups_col
+  # thanks to https://stackoverflow.com/questions/15282580/how-to-generate-a-number-of-most-distinctive-colors-in-r
+  xx_colors <- c("#e6194B", "#3cb44b", "#ffe119", "#4363d8", "#f58231",
+                 "#911eb4", "#42d4f4", "#f032e6", "#bfef45", "#fabed4",
+                 "#469990", "#dcbeff", "#9A6324", "#fffac8", "#800000",
+                 "#aaffc3", "#808000", "#ffd8b1", "#000075", "#a9a9a9")
+  xx_colors2 <- c("#aaffc3", "#808000", "#ffd8b1", "#000075", "#a9a9a9",
+                  "#469990", "#dcbeff", "#9A6324", "#fffac8", "#800000",
+                  "#e6194B", "#3cb44b", "#ffe119", "#4363d8", "#f58231",
+                  "#911eb4", "#42d4f4", "#f032e6", "#bfef45", "#fabed4")
+
+  if (is.null(ref_col) & !is.null(L)) {
+    if (length(classes)<20) {
+      ref_col <- xx_colors[1:length(classes)]
+    } else {
+      ref_col <- sample(xx_colors, size = length(classes), replace = T)
+    }
+    names(ref_col) <- classes
+  }
+  if (is.null(pred_col) & !is.null(pred)) {
+    if (length(classes)<20) {
+      pred_col <- xx_colors[1:length(classes)]
+    } else {
+      pred_col <- sample(xx_colors, size = length(classes), replace = T)
+    }
+    names(pred_col) <- classes
+  }
+  if (is.null(platform_col) & !is.null(P)) {
+    # xx_colors2 to give it a bit different colors than the classes
+    if (length(platforms_ord)<20) {
+      platform_col <- xx_colors2[1:length(platforms_ord)]
+    } else {
+      platform_col <- sample(xx_colors, size = length(platforms_ord), replace = T)
+    }
+    names(platform_col) <- platforms_ord
+  }
+
+  ### get info for top_anno ###
+  # find the samples number to be used in the plotting
+  # and get samples' names
+  sam_names <- colnames(D)
+
+  # get the labels and groups for the top anno
+  if (top_anno == "ref") {
+    lab        <- L
+    groups     <- classes
+    groups_col <- ref_col
+  }
+  if (top_anno == "prediction") {
+    lab        <- pred$max_score
+    groups     <- classes
+    groups_col <- pred_col
+  }
+  if (top_anno == "platform") {
+    lab        <- P
+    groups     <- platforms_ord
+    groups_col <- platform_col
+  }
+
+  ### anno ord ###
+  anno_ord <- c("ref", "prediction", "platform")
+  anno_ord <- anno_ord[c(!is.null(L) & show_ref,
+                         !is.null(pred) & show_predictions,
+                         !is.null(P) & show_platform)]
+  anno_ord <- anno_ord[!anno_ord %in% top_anno]
+
+  ### get sample order ###
+  # cluster the samples in each group
+  if (cluster_cols & (top_anno %in% c("ref", "prediction"))) {
+    tmp <- c()
+    for(i in groups){
+      select_samples <- sam_names[lab==i]
+
+      tmp_r <- C$classifiers[[i]]$TSPs
+
+      tmp_binary <- D[tmp_r[,1],select_samples] > D[tmp_r[,2],select_samples]
+      d   <- dist(t(tmp_binary[,select_samples]), method = "euclidean")
+      fit <- hclust(d, method="ward.D2")
+      tmp <- c(tmp, fit$labels[fit$order])
+    }
+
+    sam_ord <- order(match(sam_names, tmp))[1:length(tmp)]
+    rm(tmp)
+  }
+
+  # cluster samples when platform is the top anno
+  if (cluster_cols & top_anno == "platform") {
+
+    # get the rules for all classifiers
+    tmp_r <- data.frame(matrix(NA, ncol = 2, nrow = 0),
+                        stringsAsFactors = FALSE)
+    for (cl in classes) {
+      tmp_r <- rbind(tmp_r, C$classifiers[[cl]]$TSPs)
+    }
+
+    tmp <- c()
+    for(i in groups){
+      select_samples <- sam_names[lab==i]
+
+      tmp_binary <- D[tmp_r[,1],select_samples] > D[tmp_r[,2],select_samples]
+      d   <- dist(t(tmp_binary[,select_samples]), method = "euclidean")
+      fit <- hclust(d, method="ward.D2")
+      tmp <- c(tmp, fit$labels[fit$order])
+    }
+
+    sam_ord <- order(match(sam_names, tmp))[1:length(tmp)]
+    rm(tmp)
+  }
+
+  if (!cluster_cols) {
+    # this will only group samples without clustering
+    # based on the input data
+    sam_ord <- order(match(lab, groups))
+  }
+
+  # change everything based on the new order
+  # if null then will still be null
+  D         <- D[,sam_ord]
+  L         <- L[sam_ord]
+  P         <- P[sam_ord]
+  pred      <- pred[sam_ord,]
+  lab       <- lab[sam_ord]
+  sam_names <- sam_names[sam_ord]
+
+  num_sam   <- ncol(D)
+
+  # this should be after clustering find where the lines should
+  # be the lines
+  splits <- table(lab)[order(match(names(table(lab)), groups))]
+
+  ### plot top_anno ###
+  {
+    # Subtype annotation
+    AreaStart <- 0.94
+    SizeUnit <- anno_height
+    Size <- SizeUnit * 1
+    AreaEnd <- AreaStart - Size
+    par(fig = c(0, 1, AreaEnd, AreaStart), mar = margin,
+        mgp = c(3, 0.5, 0), new = FALSE)
+    plot(c(0, 1), c(0, 1), type = "n", xaxs = "i", yaxs = "i",
+         xlab = "", ylab = "", main = "", xlim = c(0, num_sam),
+         ylim = c(0, 1), xaxt = "n", yaxt = "n", bty = "n")
+
+    # headlines
+    text_positions <- cumsum(splits)[1]/2
+    for (i in 1:(length(cumsum(splits)) - 1)) {
+      text_positions <- c(text_positions,
+                          ((cumsum(splits)[i + 1] -
+                              cumsum(splits)[i])/2 +
+                             cumsum(splits)[i]))
+    }
+
+    # smaller headlines
+    mtext(groups, side = 3, line = 0, outer = FALSE, at = text_positions,
+          adj = NA, padj = NA, cex = 0.8, col = groups_col,
+          font = NA)
+
+    mtext(title, side = 3, line = -1, outer = TRUE, font = 2)
+
+
+    # draw the subtypes
+    axis(side = 2, at = 0.5,
+         labels = c("ref"="Ref. labels",
+                    "prediction"="Predictions",
+                    "platform"="Platform/Study")[top_anno],
+         las = 1, cex.axis = 0.7, tick = 0)
+    for (f in groups) {
+      for (g in which(lab == f)) {
+        rect(g - 1, 0, g, 1, col = groups_col[f], border = NA)
+      }
+    }
+
+    # the box and the white lines
+    box(lwd = 1)
+    li <- cumsum(splits)
+    abline(v=li, lwd = 1.5, lty=1, col="black")
+  }
+
+  ### plot next annos ###
+  for (i in anno_ord) {
+    {
+      # Subtype annotation
+      Gap      <- 0.0
+      AreaStart<- AreaStart-Size-Gap
+      SizeUnit <- anno_height
+      Size     <- SizeUnit*1
+      AreaEnd  <- AreaStart-Size
+
+      par(fig = c(0, 1, AreaEnd, AreaStart), mar = margin,
+          mgp = c(3, 0.5, 0), new = TRUE)
+      plot(c(0, 1), c(0, 1), type = "n", xaxs = "i", yaxs = "i",
+           xlab = "", ylab = "", main = "", xlim = c(0, num_sam),
+           ylim = c(0, 1), xaxt = "n", yaxt = "n", bty = "n")
+
+      # draw the annotation name
+      axis(side = 2, at = 0.5,
+           labels = c("ref"="Ref. labels",
+                      "prediction"="Predictions",
+                      "platform"="Platform/Study")[i],
+           las = 1, cex.axis = 0.7, tick = 0)
+
+      if (i == "ref") {
+        tmp_color <- ref_col
+        tmp_lab   <- L
+      }
+      if (i == "prediction") {
+        tmp_color <- pred_col
+        tmp_lab   <- pred$max_score
+      }
+      if (i == "platform") {
+        tmp_color <- platform_col
+        tmp_lab   <- P
+      }
+
+      for (f in unique(tmp_lab)) {
+        for (g in which(tmp_lab == f)) {
+          rect(g - 1, 0, g, 1, col = tmp_color[f], border = NA)
+        }
+      }
+
+      # the box and the white lines
+      box(lwd = 1)
+      li <- cumsum(splits)
+      abline(v=li, lwd = 1.5, lty=1, col="black")
+    }
+  }
+
+  ### from here if the top_anno is platform then groups should be classes
+  if (top_anno == "platform") {
+    groups <- classes
+  }
+  ### plot scores ###
+  if (show_scores & !is.null(pred)){
+    score_matrix <- pred[,groups, drop=FALSE]
+
+    Gap      <- 0.01
+    AreaStart<- AreaStart-Size-Gap
+    SizeUnit <- score_height
+    Size     <- SizeUnit*1
+    AreaEnd  <- AreaStart-Size
+
+    for (class in colnames(score_matrix)) {
+
+      par(fig=c(0,1,AreaEnd,AreaStart),mar=margin,
+          mgp=c(3,0.5,0),new=TRUE)
+
+      barplot(as.numeric(score_matrix[,class]),
+              col=pred_col[class],
+              space=F,
+              xaxs='i', yaxs='i',xlim=c(0,num_sam),border =NA,
+              ylim=c(0,1),xaxt="n",yaxt="n",bty="n",ylab="",xlab="")
+      box(lwd=1)
+      axis(2, at =0.5,labels=paste("Scores:", class),las=1,cex.axis=0.7,tick=0)
+      axis(4, at =c(0.1,0.5,0.9),labels=c("0", "0.5", "1"),
+           las=1, cex.axis=0.4, tick = FALSE)
+
+      li <- cumsum(splits)
+      abline(v=li, lwd = 1.5, lty=1, col="black")
+
+      ###
+      if (class == colnames(score_matrix)[ncol(score_matrix)]) {
+        next
+      }
+      ###
+      Gap      <- 0.00
+      AreaStart<- AreaStart-Size-Gap
+      SizeUnit <- score_height
+      Size     <- SizeUnit*1
+      AreaEnd  <- AreaStart-Size
+      ###
+    }
+  }
+
+  ### plot binary heatmaps ###
+  # to know the height of the heatmap
+  Size <- (AreaEnd-(0.005*length(groups))-0.08)/length(groups)
+
+  for (o in groups){
+    tmp <- C$classifiers[[o]]$TSPs
+
+    binary <- D[tmp[,1],] > D[tmp[,2],]
+    binary <- binary + 1 # to fit with the indexes for the colors
+
+    # cluster the rules
+    if (cluster_rows) {
+      d       <- dist(binary, method = "euclidean")
+      fit     <- hclust(d, method="ward.D2")
+      tmp_ord <- fit$labels[fit$order]
+    } else {
+      tmp_ord <- 1:nrow(binary)
+    }
+
+    binary <- binary[tmp_ord, ]
+
+    ###
+    Gap       <- 0.005
+    AreaStart <- AreaEnd-Gap
+    AreaEnd   <- AreaStart-Size
+    ###
+
+    par(fig = c(0, 1, AreaEnd, AreaStart),
+        mar = margin, mgp = c(3, 0.5, 0), new=TRUE)
+
+    myplot <- plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
+                   xlab = "", ylab = "", main = "",
+                   xlim = c(0, num_sam), ylim = c(length(tmp_ord), 0),
+                   xaxt = "n", yaxt = "n", bty = "n")
+
+    if (show_rule_name){
+      rule_names <- paste(tmp[,1],tmp[,2], sep = ">")
+      axis(4, at =seq(0,(length(tmp_ord)-1),1)+0.5,
+           labels=rule_names,las=1,cex.axis=0.5,tick=0)
+    }
+
+    for(f in 1:ncol(binary)){
+      for(g in 1:nrow(binary)){
+        rect(f-1,g,f,g-1,col=binary_col[binary[g,f]],border=F,lwd=0)
+      }
+    }
+
+    # put the class name + number of rules
+    axis(2, at = nrow(binary)/2, labels = paste(o, "\n", nrow(binary), "rules"),
+         las = 1, cex.axis = 0.7, tick = 0, col = groups_col[o])
+
+    box(lwd=1)
+
+    li <- cumsum(splits)
+    abline(v=li[-length(li)], lwd = 3, lty=3, col="red")
+  }
+
+  ### plot legends
+  if (legend) {
+    par(fig = c(0, 1, 0.02, (AreaEnd-0.01)),
+        mar = margin, mgp = c(3, 0.5, 0), new=TRUE)
+    plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
+         xlab = "", ylab = "", main = "",
+         xlim = c(0, num_sam), ylim = c(length(tmp_ord), 0),
+         xaxt = "n", yaxt = "n", bty = "n")
+
+    if (!is.null(P) & show_platform) {
+      legend(x = "topright", title = "Platform",
+             ncol = length(platforms_ord), cex = 0.5,
+             legend = platforms_ord,
+             fill = platform_col)
+    }
+
+    if (!is.null(L) & show_ref) {
+      title <- "Ref"
+      if (!is.null(pred) & show_predictions &
+          length(ref_col) == length(pred_col) &
+          all(ref_col %in% pred_col)) {
+        title <- "Classes"
+      }
+      legend(x = "topleft", title = title,
+             ncol = length(classes), cex = 0.5,
+             legend = names(ref_col),
+             fill = ref_col)
+    }
+
+    if (!is.null(pred) & show_predictions &
+        (length(ref_col) != length(pred_col) |
+        any(!ref_col %in% pred_col))) {
+      legend(x = "top", title = "Predictions",
+             ncol = length(unique(pred$max_score)), cex = 0.5,
+             legend = names(pred_col),
+             fill = pred_col)
+    }
+  }
+}
 
 # Gene filtering using RF
 sort_genes_RF <- function (data_object,
@@ -1377,7 +2042,7 @@ sort_genes_RF <- function (data_object,
                            keep.inbag = FALSE,
                            verbose = TRUE, ...) {
 
-  #### Checks
+  ### Checks
   if (class(data_object)[1] != "multiclassPairs_object") {
     stop("This function requires multiclassPairs_object!
               Use ReadData function to generate it.")
@@ -1414,7 +2079,7 @@ sort_genes_RF <- function (data_object,
     stop("platform_wise=TRUE while there is no platform vector in the object!")
   }
 
-  #### extract data and labels
+  ### extract data and labels
   # get the data
   D <- data_object$data$Data
 
@@ -1485,7 +2150,7 @@ sort_genes_RF <- function (data_object,
     message()
   }
 
-  #### Object
+  ### Object
   # create empty Random Forests sorted genes object
   if (verbose) {
     message("Creating new Random Forests sorted genes object")
@@ -1498,12 +2163,12 @@ sort_genes_RF <- function (data_object,
   message()
 
 
-  ####
+  ###
   # prepare empty list for the genes
   sorted_genes <- vector("list", length(groups)+1)
   names(sorted_genes) <- c("all", groups)
 
-  ####
+  ###
   # filtering
   if (verbose) {
     message("Building RF for filtering...")
@@ -1527,9 +2192,9 @@ sort_genes_RF <- function (data_object,
 
       if (verbose) {
         message("RF: all classes",
-            "| num trees:", num.trees,
-            "| min node size:", min.node.size,
-            "| error:", round(rf_all$prediction.error,3))
+                "| num trees:", num.trees,
+                "| min node size:", min.node.size,
+                "| error:", round(rf_all$prediction.error,3))
       }
       tmp1 <- sort(rf_all$variable.importance, decreasing = TRUE)
       tmp1 <- names(tmp1)
@@ -1556,9 +2221,9 @@ sort_genes_RF <- function (data_object,
 
         if (verbose) {
           message("RF: class", cl,
-              "| num trees:", num.trees,
-              "| min node size:", min.node.size,
-              "| error:", round(rfa_cl$prediction.error,3))
+                  "| num trees:", num.trees,
+                  "| min node size:", min.node.size,
+                  "| error:", round(rfa_cl$prediction.error,3))
         }
         tmp1 <- sort(rfa_cl$variable.importance, decreasing = TRUE)
         tmp1 <- names(tmp1)
@@ -1613,9 +2278,9 @@ sort_genes_RF <- function (data_object,
 
         if (verbose) {
           message("RF: all classes",
-              "| num trees:", num.trees,
-              "| min node size:", min.node.size,
-              "| error:", round(rf_all$prediction.error,3))
+                  "| num trees:", num.trees,
+                  "| min node size:", min.node.size,
+                  "| error:", round(rf_all$prediction.error,3))
         }
         tmp1 <- sort(rf_all$variable.importance, decreasing = TRUE)
         tmp1 <- names(tmp1)
@@ -1627,7 +2292,7 @@ sort_genes_RF <- function (data_object,
         for (cl in groups){
 
           tmp_check <- as.character(group_TSP(label = L[plat_samples],
-                                             my_group = cl))
+                                              my_group = cl))
 
           if (length(unique(tmp_check)) == 1) {
             if (verbose) {
@@ -1649,9 +2314,9 @@ sort_genes_RF <- function (data_object,
           counter[[cl]] <- c(counter[[cl]], y)
           if (verbose) {
             message("RF: class", cl,
-                "| num trees:", num.trees,
-                "| min node size:", min.node.size,
-                "| error:", round(rfa_cl$prediction.error,3))
+                    "| num trees:", num.trees,
+                    "| min node size:", min.node.size,
+                    "| error:", round(rfa_cl$prediction.error,3))
           }
           tmp1 <- sort(rfa_cl$variable.importance, decreasing = TRUE)
           tmp1 <- names(tmp1)
@@ -1729,7 +2394,7 @@ sort_rules_RF <- function (data_object,
                            keep.inbag = FALSE,
                            verbose = TRUE, ...) {
 
-  #### Checks
+  ### Checks
   if (class(data_object)[1] != "multiclassPairs_object") {
     stop("This function requires multiclassPairs_object!
               Use ReadData function to generate it.")
@@ -1784,7 +2449,7 @@ sort_rules_RF <- function (data_object,
     One or both of them can be TRUE!")
   }
 
-  #### extract data and labels
+  ### extract data and labels
   # get the data
   D <- data_object$data$Data
 
@@ -1803,7 +2468,7 @@ sort_rules_RF <- function (data_object,
     studies     <- unique(plat_vector)
   }
 
-  #### additional checks
+  ### additional checks
   # Warning if wanted filtered genes > than the available genes
   if (genes_altogether > length(sorted_genes_RF[[1]]$sorted_genes$all)) {
     message("NOTE!")
@@ -1849,7 +2514,7 @@ sort_rules_RF <- function (data_object,
     }
   }
 
-  #### Object
+  ### Object
   # create empty Random Forests sorted genes object
   if (verbose) {
     message("Creating new Random Forests sorted rules object")
@@ -1862,14 +2527,14 @@ sort_rules_RF <- function (data_object,
                      calls=c()))
   class(object_tmp) <- "RandomForest_sorted_rules"
 
-  ####
+  ###
   # prepare empty list for the genes
   sorted_genes <- vector("list", length(groups) + 1)
   names(sorted_genes) <- c("all", groups)
 
   empty_list <- sorted_genes
 
-  ####
+  ###
   # get the wanted genes
   if (verbose) {
     message("Extracting the needed genes from the sorted genes object...")
@@ -1950,9 +2615,9 @@ sort_rules_RF <- function (data_object,
       RF_classifiers[["all"]] <- rf_all
       if (verbose) {
         message("RF: all classes",
-            "| num trees:", num.trees,
-            "| min node size:", min.node.size,
-            "| error:", round(rf_all$prediction.error,3))
+                "| num trees:", num.trees,
+                "| min node size:", min.node.size,
+                "| error:", round(rf_all$prediction.error,3))
       }
       # order based on the importance
       tmp <- names(sort(rf_all$variable.importance, decreasing = TRUE))
@@ -1977,9 +2642,9 @@ sort_rules_RF <- function (data_object,
         RF_classifiers[[cl]] <- rfa_cl
         if (verbose) {
           message("RF: class", cl,
-              "| num trees:", num.trees,
-              "| min node size:", min.node.size,
-              "| error:", round(rfa_cl$prediction.error,3))
+                  "| num trees:", num.trees,
+                  "| min node size:", min.node.size,
+                  "| error:", round(rfa_cl$prediction.error,3))
         }
         # order based on the importance
         tmp <- names(sort(rfa_cl$variable.importance, decreasing = TRUE))
@@ -2038,9 +2703,9 @@ sort_rules_RF <- function (data_object,
         RF_classifiers[[y]][["all"]] <- rf_all
         if (verbose) {
           message("RF: all classes",
-              "| num trees:", num.trees,
-              "| min node size:", min.node.size,
-              "| error:", round(rf_all$prediction.error,3))
+                  "| num trees:", num.trees,
+                  "| min node size:", min.node.size,
+                  "| error:", round(rf_all$prediction.error,3))
         }
         tmp1 <- sort(rf_all$variable.importance, decreasing = TRUE)
         tmp1 <- names(tmp1)
@@ -2053,7 +2718,7 @@ sort_rules_RF <- function (data_object,
         for (cl in groups){
 
           tmp_check <- as.character(group_TSP(label = L[plat_samples],
-                                             my_group = cl))
+                                              my_group = cl))
 
           if (length(unique(tmp_check)) == 1) {
             if (verbose) {
@@ -2075,9 +2740,9 @@ sort_rules_RF <- function (data_object,
           counter[[cl]] <- c(counter[[cl]], y)
           if (verbose) {
             message("RF: class", cl,
-                "| num trees:", num.trees,
-                "| min node size:", min.node.size,
-                "| error:", round(rfa_cl$prediction.error,3))
+                    "| num trees:", num.trees,
+                    "| min node size:", min.node.size,
+                    "| error:", round(rfa_cl$prediction.error,3))
           }
           tmp1 <- sort(rfa_cl$variable.importance, decreasing = TRUE)
           tmp1 <- names(tmp1)
@@ -2161,7 +2826,7 @@ train_RF <- function (data_object,
                       probability = TRUE,
                       verbose = TRUE, ...) {
 
-  #### Checks
+  ### Checks
   if (class(data_object)[1] != "multiclassPairs_object") {
     stop("This function requires multiclassPairs_object!
               Use ReadData function to generate it.")
@@ -2198,7 +2863,7 @@ train_RF <- function (data_object,
     stop("importance variable should be one of these options 'impurity', 'impurity_corrected',  or 'permutation'!")
   }
 
-  #### extract data and labels
+  ### extract data and labels
   # get the data
   D <- data_object$data$Data
 
@@ -2211,7 +2876,7 @@ train_RF <- function (data_object,
   # get the call
   param <- match.call()
 
-  #### additional checks
+  ### additional checks
   # Remove genes with NAs
   if (sum(!complete.cases(D)) > 0) {
     message("These genes will be excluded from the analysis due to NAs:")
@@ -2255,7 +2920,7 @@ train_RF <- function (data_object,
     message()
   }
 
-  #### Object
+  ### Object
   # create empty Random Forests sorted genes object
   if (verbose) {
     message("Creating new Random Forest object")
@@ -2270,7 +2935,7 @@ train_RF <- function (data_object,
   class(object_tmp) <- "rule_based_RandomForest"
 
 
-  ####
+  ###
   # get the wanted genes
   if (verbose) {
     message("Extracting the needed rules from the sorted rules object...")
@@ -2306,10 +2971,10 @@ train_RF <- function (data_object,
       if (verbose) {
         message("Altogether rules:")
         message("available in rules:",
-            length(sorted_rules_RF[[1]]$sorted_rules$all), "rules")
+                length(sorted_rules_RF[[1]]$sorted_rules$all), "rules")
         message("removing the rules with repeated genes (",
-            gene_repetition,"times allowed ):",
-            ncol(tmp)," rules left")
+                gene_repetition,"times allowed ):",
+                ncol(tmp)," rules left")
         message("get", min(rules_altogether, ncol(tmp)), "rules")
         message()
       }
@@ -2350,10 +3015,10 @@ train_RF <- function (data_object,
       if (verbose) {
         message(cl,"class rules:")
         message("available in rules:",
-            length(sorted_rules_RF[[1]]$sorted_rules[[cl]]), "rules")
+                length(sorted_rules_RF[[1]]$sorted_rules[[cl]]), "rules")
         message("removing the rules with repeated genes (",
-            gene_repetition,"times allowed )...",
-            ncol(tmp)," rules left")
+                gene_repetition,"times allowed )...",
+                ncol(tmp)," rules left")
         message("get", min(rules_one_vs_rest, ncol(tmp)), "rules")
         message()
       }
@@ -2388,7 +3053,7 @@ train_RF <- function (data_object,
   binary    <- D[gene1,] < D[gene2,]
   rownames(binary) <- paste0(gene1,"__",gene2)
 
-  ####
+  ###
   # run burota
   if (run_boruta) {
     if (verbose) {
@@ -2414,7 +3079,7 @@ train_RF <- function (data_object,
     if (verbose) {
       message(" Reject",sum(out$finalDecision == "Rejected"),"rules")
       message(" Use ",sum(out$finalDecision != "Rejected"),
-          "rules for the final RF classifier...")
+              "rules for the final RF classifier...")
     }
 
     if (plot_boruta) {
@@ -2467,11 +3132,11 @@ train_RF <- function (data_object,
                    probability = probability, ...)
   if (verbose) {
     message("RF: Done!",
-        "| total genes:", length(genes),
-        "| total rules:", nrow(rules),
-        "| num trees:", num.trees,
-        "| min node size:", min.node.size,
-        "| error:", round(rf_all$prediction.error,3))
+            "| total genes:", length(genes),
+            "| total rules:", nrow(rules),
+            "| num trees:", num.trees,
+            "| min node size:", min.node.size,
+            "| error:", round(rf_all$prediction.error,3))
   }
   # store in object
   object_tmp$RF_scheme$genes <- genes
@@ -2554,6 +3219,669 @@ predict_RF <- function(classifier, Data) {
   return(results)
 }
 
+# plot binary for classifier based on binary RF scheme
+plot_binary_RF <- function(Data,
+                           classifier,
+                           ref = NULL,
+                           prediction = NULL,
+                           platform = NULL,
+                           classes = NULL,
+                           platforms_ord = NULL,
+                           top_anno = c("ref", "prediction", "platform")[1],
+                           title = "",
+                           binary_col = c("white", "black", "gray"),
+                           ref_col = NULL,
+                           pred_col = NULL,
+                           platform_col = NULL,
+                           show_ref = TRUE,
+                           show_predictions = TRUE,
+                           show_platform = TRUE,
+                           show_scores = TRUE,
+                           show_rule_name = TRUE,
+                           legend = TRUE,
+                           cluster_cols = TRUE,
+                           cluster_rows = TRUE,
+                           anno_height = 0.03,
+                           score_height = 0.03,
+                           margin = c(0, 5, 0, 5)) {
+
+
+  ### get classifier ###
+  # check classifier object
+  if (class(classifier)[1] != "rule_based_RandomForest") {
+    stop("classifier should be rule_based_RandomForest object from train_RF function!")
+  } else {
+    C <- classifier
+  }
+
+
+  ### get data ###
+  # check the object class
+  if (!class(Data)[1] %in% c("multiclassPairs_object", "ExpressionSet",
+                             "data.frame", "matrix")) {
+    stop("Data should be class:
+  matrix/data.frame/ExpressionSet/multiclassPairs_object from ReadData function!")
+  }
+
+  # get the data matrix
+  if (is.data.frame(Data)) {
+    D <- Data
+  }
+
+  if (is.matrix(Data)) {
+    D <- as.data.frame(Data, stringsAsFactors = FALSE)
+  }
+
+  # if the input Data is ExpressionSet object
+  if (class(Data)[1] == "ExpressionSet") {
+    # extract the expression matrix from the ExpressionSet
+    D <- as.matrix(exprs(Data))
+  }
+
+  if (class(Data)[1] == "multiclassPairs_object") {
+    D <- Data$data$Data
+  }
+
+  # check if rownames is not NULL to avoid error later
+  if (is.null(rownames(D))) {
+    stop("Provide feature/gene names as rownames in the Data matrix!")
+  }
+
+  ### get classes ###
+  tmp_n <- colnames(classifier$RF_scheme$RF_classifier$predictions)
+  if (!is.null(classes)) {
+    # check if all classes are in the classifier object
+    if (any(!classes %in% tmp_n)) {
+      message("These classes are not found in the classifier object:")
+      message(paste0(classes[!classes %in% tmp_n],
+                     collapse = " "))
+      stop("classes names in classes argument should be similar to the names of the classifiers in classifier object!")
+    }
+  } else {
+    # get the classes based on the names in the classifier object
+    classes <- tmp_n
+  }
+
+  if (any(!tmp_n %in% classes)) {
+    message("Because the classes argument miss these classes then these classes will be removed from the heatmap:")
+    message(paste0(tmp_n[!tmp_n %in% classes], collapse = " "))
+  }
+
+  ### get ref labels ###
+  # if the data is object
+  if (class(Data)[1] == "multiclassPairs_object") {
+    # get the ref from the object
+    if (is.null(ref)) {
+      L <- Data$data$Labels
+    }
+  }
+
+  # get the input ref Labels from the user
+  if ((is.character(ref) | is.factor(ref)) & class(Data)[1] !=
+      "ExpressionSet") {
+    L <- as.character(ref)
+  }
+
+  # if the input Data is ExpressionSet object
+  if (class(Data)[1] == "ExpressionSet") {
+
+    # extract the Labels - in case it is stored in the
+    # ExpressionSet
+    if (is.character(ref) & length(ref) == 1) {
+      if (ref %in% varLabels(Data)) {
+        L <- as.character(pData(Data)[, ref])
+      } else {
+        message(capture.output(cat("Phenotype data has these variables:",
+                                   varLabels(Data), fill = TRUE)))
+        stop("Ref label variable is not found in the phenotype data of your ExpressionSet")
+      }
+    }
+
+    # get the input Labels vector as it is
+    if ((is.character(ref) | is.factor(ref)) & length(ref) !=
+        1) {
+      L <- as.character(ref)
+    }
+  }
+
+  # check the length of the ref labels
+  if (length(L) != ncol(D) & !is.null(ref)) {
+    message("Number of samples: ", ncol(D))
+    message("Labels length: ", length(L))
+    stop("Labels vector length are not equal to
+       samples in data")
+  }
+
+  # no ref labels if the user did not input ref and the input
+  # is not multiclassPairs_object
+  if (!is.null(ref) & class(Data)[1] != "multiclassPairs_object") {
+    L <- NULL
+  }
+
+
+  ### get Platform labels ###
+  # if the data is object
+  if (class(Data)[1] == "multiclassPairs_object") {
+    # get the platform from the object
+    if (is.null(platform)) {
+      P <- Data$data$Platform
+    }
+  }
+
+  # get the input platform Labels from the user
+  if ((is.character(platform) | is.factor(platform)) & class(Data)[1] !=
+      "ExpressionSet") {
+    P <- as.character(platform)
+  }
+
+  # if the input Data is ExpressionSet object
+  if (class(Data)[1] == "ExpressionSet") {
+
+    # extract the platform label - in case it is stored in the
+    # ExpressionSet
+    if (is.character(platform) & length(platform) == 1) {
+      if (platform %in% varLabels(Data)) {
+        P <- as.character(pData(Data)[, platform])
+      } else {
+        message(capture.output(cat("Phenotype data has these variables:",
+                                   varLabels(Data), fill = TRUE)))
+        stop("Platform/study label variable is not found in the phenotype data of your ExpressionSet")
+      }
+    }
+
+    # get the input Labels vector as it is
+    if ((is.character(platform) | is.factor(platform)) &
+        length(platform) != 1) {
+      P <- as.character(platform)
+    }
+  }
+
+  # check the length of the platform labels
+  if (length(P) != ncol(D) & !is.null(platform)) {
+    message("Number of samples: ", ncol(D))
+    message("Labels length: ", length(P))
+    stop("Platform labels vector length are not equal to
+       samples in data")
+  }
+
+  # no platform labels if the user did not input platform and
+  # the input is not multiclassPairs_object
+  if (!is.null(platform) & class(Data)[1] != "multiclassPairs_object") {
+    P <- NULL
+  }
+
+  ### get platforms_ord ###
+  if (!is.null(platforms_ord) & !is.null(P)) {
+    # check if all platforms are in platforms_ord
+    if (any(!platforms_ord %in% P)) {
+      message("These platform/study in platforms_ord are not in found the platform labels:")
+      message(platforms_ord[!platforms_ord %in% P])
+      stop("platforms_ord argument should have similar names of the platforms/studies in the data!")
+    }
+  } else {
+    # get the platforms_ord based on the names in the classifier
+    # object
+    platforms_ord <- unique(P)
+  }
+
+  ### get prediction ###
+  # check if the prediction df is from the prediction function
+  if (!is.null(prediction) & any(class(prediction) %in% "ranger.prediction")) {
+    pred <- as.data.frame(prediction$predictions, stringsAsFactors = FALSE)
+
+    # get the prediction labels
+    pred$max_score <- colnames(pred)[max.col(pred, ties.method = "first")]
+    prediction <- pred
+  } else {
+    pred <- NULL
+  }
+
+  # check the length of the platform labels
+  if (nrow(pred) != ncol(D) & !is.null(prediction)) {
+    message("Number of samples in the data: ", ncol(D))
+    message("Number of samples in the prediction: ", ncol(pred))
+    stop("Predictions should be for the same data!
+     Use predict_RF to generate it for this data!")
+  }
+
+  ### checks ###
+  if (is.null(pred) & is.null(L) & is.null(P)) {
+    stop("No available ref, prediction, or platform labels!
+     One of them atleast is needed.")
+  }
+
+  ### checks for top_anno ###
+  # check if the top_anno labels are available
+  if (top_anno == "ref" & is.null(L)) {
+    stop("top annotation (top_anno) is ref while there is no ref labels available!")
+  }
+  if (top_anno == "ref" & !show_ref) {
+    message("show_ref was turned to TRUE because top_anno is 'ref'!")
+  }
+
+  if (top_anno == "prediction" & is.null(pred)) {
+    stop("top annotation (top_anno) is prediction while there is no prediction dataframe available! Use predict_one_vs_rest_TSP function to generate it!")
+  }
+  if (top_anno == "prediction" & !show_predictions) {
+    message("show_predictions was turned to TRUE because top_anno is 'prediction'!")
+  }
+
+  if (top_anno == "platform" & is.null(P)) {
+    stop("top annotation (top_anno) is platform while there is no platform labels available!")
+  }
+  if (top_anno == "platform" & !show_platform) {
+    message("show_platform was turned to TRUE because top_anno is 'platform'!")
+  }
+
+  if (any(!top_anno %in% c("ref", "prediction", "platform")) |
+      !is.character(top_anno) | length(top_anno) != 1) {
+    stop("Top annotation argument should be character with one of these options:
+     ref prediction platform")
+  }
+
+  ### title ###
+  if (!is.character(title) | length(title) != 1) {
+    stop("Title argument should be character input!")
+  }
+
+  ### binary heatmap colors ###
+  if (!is.character(binary_col) | length(binary_col) != 3) {
+    stop("binary_col should be character input with length of 3!
+     Three colors are needed for rules with false, true and NAs.
+     By default it is c('white','black','gray')")
+  }
+
+  ### ref anno colors ###
+  if (show_ref & !is.null(L) & !is.null(ref_col)) {
+    if (!is.character(ref_col) | any(!classes %in% names(ref_col))) {
+      stop("ref_col should be named character vector for all classes!")
+    }
+  }
+
+  ### pred anno colors ###
+  if (show_predictions & !is.null(pred) & !is.null(pred_col)) {
+    if (!is.character(pred_col) | any(!classes %in% names(pred_col))) {
+      stop("pred_col should be named character vector for all classes!")
+    }
+  }
+
+  ### platform anno colors ###
+  if (show_platform & !is.null(P) & !is.null(platform_col)) {
+    if (!is.character(platform_col) | any(!P %in% names(platform_col))) {
+      stop("platform_col should be named character vector for all platforms/studies!")
+    }
+  }
+
+  ### colors ###
+  # determine the colors groups_col
+  # thanks to https://stackoverflow.com/questions/15282580/how-to-generate-a-number-of-most-distinctive-colors-in-r
+  xx_colors <- c("#e6194B", "#3cb44b", "#ffe119", "#4363d8", "#f58231",
+                 "#911eb4", "#42d4f4", "#f032e6", "#bfef45", "#fabed4",
+                 "#469990", "#dcbeff", "#9A6324", "#fffac8", "#800000",
+                 "#aaffc3", "#808000", "#ffd8b1", "#000075", "#a9a9a9")
+  xx_colors2 <- c("#aaffc3", "#808000", "#ffd8b1", "#000075", "#a9a9a9",
+                  "#469990", "#dcbeff", "#9A6324", "#fffac8", "#800000",
+                  "#e6194B", "#3cb44b", "#ffe119", "#4363d8", "#f58231",
+                  "#911eb4", "#42d4f4", "#f032e6", "#bfef45", "#fabed4")
+
+  if (is.null(ref_col) & !is.null(L)) {
+    if (length(classes)<20) {
+      ref_col <- xx_colors[1:length(classes)]
+    } else {
+      ref_col <- sample(xx_colors, size = length(classes), replace = T)
+    }
+    names(ref_col) <- classes
+  }
+  if (is.null(pred_col) & !is.null(pred)) {
+    if (length(classes)<20) {
+      pred_col <- xx_colors[1:length(classes)]
+    } else {
+      pred_col <- sample(xx_colors, size = length(classes), replace = T)
+    }
+    names(pred_col) <- classes
+  }
+  if (is.null(platform_col) & !is.null(P)) {
+    # xx_colors2 to give it a bit different colors than the classes
+    if (length(platforms_ord)<20) {
+      platform_col <- xx_colors2[1:length(platforms_ord)]
+    } else {
+      platform_col <- sample(xx_colors, size = length(platforms_ord), replace = T)
+    }
+    names(platform_col) <- platforms_ord
+  }
+
+  ### get info for top_anno ###
+  # find the samples number to be used in the plotting
+  # and get samples' names
+  sam_names <- colnames(D)
+
+  # get the labels and groups for the top anno
+  if (top_anno == "ref") {
+    lab        <- L
+    groups     <- classes
+    groups_col <- ref_col
+  }
+  if (top_anno == "prediction") {
+    lab        <- pred$max_score
+    groups     <- classes
+    groups_col <- pred_col
+  }
+  if (top_anno == "platform") {
+    lab        <- P
+    groups     <- platforms_ord
+    groups_col <- platform_col
+  }
+
+  ### anno ord ###
+  anno_ord <- c("ref", "prediction", "platform")
+  anno_ord <- anno_ord[c(!is.null(L) & show_ref,
+                         !is.null(pred) & show_predictions,
+                         !is.null(P) & show_platform)]
+  anno_ord <- anno_ord[!anno_ord %in% top_anno]
+
+  ### get sample order ###
+  # cluster the samples in each group
+  if (cluster_cols & (top_anno %in% c("ref", "prediction"))) {
+    tmp <- c()
+    for(i in groups){
+      select_samples <- sam_names[lab==i]
+
+      #tmp_r <- C$classifiers[[i]]$TSPs
+      tmp_r <- C$RF_scheme$rules
+
+      tmp_binary <- D[tmp_r[,1],select_samples] > D[tmp_r[,2],select_samples]
+      d   <- dist(t(tmp_binary[,select_samples]), method = "euclidean")
+      fit <- hclust(d, method="ward.D2")
+      tmp <- c(tmp, fit$labels[fit$order])
+    }
+
+    sam_ord <- order(match(sam_names, tmp))[1:length(tmp)]
+    rm(tmp)
+  }
+
+  # cluster samples when platform is the top anno
+  if (cluster_cols & top_anno == "platform") {
+
+    # get the rules for all classifiers
+    tmp_r <- data.frame(matrix(NA, ncol = 2, nrow = 0),
+                        stringsAsFactors = FALSE)
+
+    tmp_r <- C$RF_scheme$rules
+
+    tmp <- c()
+    for(i in groups){
+      select_samples <- sam_names[lab==i]
+
+      tmp_binary <- D[tmp_r[,1],select_samples] > D[tmp_r[,2],select_samples]
+      d   <- dist(t(tmp_binary[,select_samples]), method = "euclidean")
+      fit <- hclust(d, method="ward.D2")
+      tmp <- c(tmp, fit$labels[fit$order])
+    }
+
+    sam_ord <- order(match(sam_names, tmp))[1:length(tmp)]
+    rm(tmp)
+  }
+
+  if (!cluster_cols) {
+    # this will only group samples without clustering
+    # based on the input data
+    sam_ord <- order(match(lab, groups))
+  }
+
+  # change everything based on the new order
+  # if null then will still be null
+  D         <- D[,sam_ord]
+  L         <- L[sam_ord]
+  P         <- P[sam_ord]
+  pred      <- pred[sam_ord,]
+  lab       <- lab[sam_ord]
+  sam_names <- sam_names[sam_ord]
+
+  num_sam   <- ncol(D)
+
+  # this should be after clustering find where the lines should
+  # be the lines
+  splits <- table(lab)[order(match(names(table(lab)), groups))]
+
+  ### plot top_anno ###
+  {
+    # Subtype annotation
+    AreaStart <- 0.94
+    SizeUnit <- anno_height
+    Size <- SizeUnit * 1
+    AreaEnd <- AreaStart - Size
+    par(fig = c(0, 1, AreaEnd, AreaStart), mar = margin,
+        mgp = c(3, 0.5, 0), new = FALSE)
+    plot(c(0, 1), c(0, 1), type = "n", xaxs = "i", yaxs = "i",
+         xlab = "", ylab = "", main = "", xlim = c(0, num_sam),
+         ylim = c(0, 1), xaxt = "n", yaxt = "n", bty = "n")
+
+    # headlines
+    text_positions <- cumsum(splits)[1]/2
+    for (i in 1:(length(cumsum(splits)) - 1)) {
+      text_positions <- c(text_positions,
+                          ((cumsum(splits)[i + 1] -
+                              cumsum(splits)[i])/2 +
+                             cumsum(splits)[i]))
+    }
+
+    # smaller headlines
+    mtext(groups, side = 3, line = 0, outer = FALSE, at = text_positions,
+          adj = NA, padj = NA, cex = 0.8, col = groups_col,
+          font = NA)
+
+    mtext(title, side = 3, line = -1, outer = TRUE, font = 2)
+
+
+    # draw the subtypes
+    axis(side = 2, at = 0.5,
+         labels = c("ref"="Ref. labels",
+                    "prediction"="Predictions",
+                    "platform"="Platform/Study")[top_anno],
+         las = 1, cex.axis = 0.7, tick = 0)
+    for (f in groups) {
+      for (g in which(lab == f)) {
+        rect(g - 1, 0, g, 1, col = groups_col[f], border = NA)
+      }
+    }
+
+    # the box and the white lines
+    box(lwd = 1)
+    li <- cumsum(splits)
+    abline(v=li, lwd = 1.5, lty=1, col="black")
+  }
+
+  ### plot next annos ###
+  for (i in anno_ord) {
+    {
+      # Subtype annotation
+      Gap      <- 0.0
+      AreaStart<- AreaStart-Size-Gap
+      SizeUnit <- anno_height
+      Size     <- SizeUnit*1
+      AreaEnd  <- AreaStart-Size
+
+      par(fig = c(0, 1, AreaEnd, AreaStart), mar = margin,
+          mgp = c(3, 0.5, 0), new = TRUE)
+      plot(c(0, 1), c(0, 1), type = "n", xaxs = "i", yaxs = "i",
+           xlab = "", ylab = "", main = "", xlim = c(0, num_sam),
+           ylim = c(0, 1), xaxt = "n", yaxt = "n", bty = "n")
+
+      # draw the annotation name
+      axis(side = 2, at = 0.5,
+           labels = c("ref"="Ref. labels",
+                      "prediction"="Predictions",
+                      "platform"="Platform/Study")[i],
+           las = 1, cex.axis = 0.7, tick = 0)
+
+      if (i == "ref") {
+        tmp_color <- ref_col
+        tmp_lab   <- L
+      }
+      if (i == "prediction") {
+        tmp_color <- pred_col
+        tmp_lab   <- pred$max_score
+      }
+      if (i == "platform") {
+        tmp_color <- platform_col
+        tmp_lab   <- P
+      }
+
+      for (f in unique(tmp_lab)) {
+        for (g in which(tmp_lab == f)) {
+          rect(g - 1, 0, g, 1, col = tmp_color[f], border = NA)
+        }
+      }
+
+      # the box and the white lines
+      box(lwd = 1)
+      li <- cumsum(splits)
+      abline(v=li, lwd = 1.5, lty=1, col="black")
+    }
+  }
+
+  ### from here if the top_anno is platform then groups should be classes
+  if (top_anno == "platform") {
+    groups <- classes
+  }
+  ### plot scores ###
+  if (show_scores & !is.null(pred)){
+    score_matrix <- pred[,groups, drop=FALSE]
+
+    Gap      <- 0.01
+    AreaStart<- AreaStart-Size-Gap
+    SizeUnit <- score_height
+    Size     <- SizeUnit*1
+    AreaEnd  <- AreaStart-Size
+
+    for (class in colnames(score_matrix)) {
+
+      par(fig=c(0,1,AreaEnd,AreaStart),mar=margin,
+          mgp=c(3,0.5,0),new=TRUE)
+
+      barplot(as.numeric(score_matrix[,class]),
+              col=pred_col[class],
+              space=F,
+              xaxs='i', yaxs='i',xlim=c(0,num_sam),border =NA,
+              ylim=c(0,1),xaxt="n",yaxt="n",bty="n",ylab="",xlab="")
+      box(lwd=1)
+      axis(2, at =0.5,labels=paste("Scores:", class),las=1,cex.axis=0.7,tick=0)
+      axis(4, at =c(0.1,0.5,0.9),labels=c("0", "0.5", "1"),
+           las=1, cex.axis=0.4, tick = FALSE)
+
+      li <- cumsum(splits)
+      abline(v=li, lwd = 1.5, lty=1, col="black")
+
+      ###
+      if (class == colnames(score_matrix)[ncol(score_matrix)]) {
+        next
+      }
+      ###
+      Gap      <- 0.00
+      AreaStart<- AreaStart-Size-Gap
+      SizeUnit <- score_height
+      Size     <- SizeUnit*1
+      AreaEnd  <- AreaStart-Size
+      ###
+    }
+  }
+
+  ### plot binary heatmaps ###
+  # to know the height of the heatmap
+  Size <- AreaEnd-0.08-0.08
+
+  tmp <- C$RF_scheme$rules
+
+  binary <- D[tmp[,1],] > D[tmp[,2],]
+  binary <- binary + 1 # to fit with the indexes for the colors
+
+  # cluster the rules
+  if (cluster_rows) {
+    d       <- dist(binary, method = "euclidean")
+    fit     <- hclust(d, method="ward.D2")
+    tmp_ord <- fit$labels[fit$order]
+  } else {
+    tmp_ord <- 1:nrow(binary)
+  }
+
+  binary <- binary[tmp_ord, ]
+
+  ###
+  Gap       <- 0.005
+  AreaStart <- AreaEnd-Gap
+  AreaEnd   <- AreaStart-Size
+  ###
+
+  par(fig = c(0, 1, AreaEnd, AreaStart),
+      mar = margin, mgp = c(3, 0.5, 0), new=TRUE)
+
+  myplot <- plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
+                 xlab = "", ylab = "", main = "",
+                 xlim = c(0, num_sam), ylim = c(length(tmp_ord), 0),
+                 xaxt = "n", yaxt = "n", bty = "n")
+
+  if (show_rule_name){
+    rule_names <- paste(tmp[,1],tmp[,2], sep = ">")
+    axis(4, at =seq(0,(length(tmp_ord)-1),1)+0.5,
+         labels=rule_names,las=1,cex.axis=0.5,tick=0)
+  }
+
+  for(f in 1:ncol(binary)){
+    for(g in 1:nrow(binary)){
+      rect(f-1,g,f,g-1,col=binary_col[binary[g,f]],border=F,lwd=0)
+    }
+  }
+
+  # put the class name + number of rules
+  axis(2, at = nrow(binary)/2, labels = "All classes",
+       las = 1, cex.axis = 0.7, tick = 0, adj=1)
+  axis(2, at = (nrow(binary)/2)+1, labels = paste(nrow(binary), "rules"),
+       las = 1, cex.axis = 0.7, tick = 0, adj=1)
+
+  box(lwd=1)
+
+  li <- cumsum(splits)
+  abline(v=li[-length(li)], lwd = 3, lty=3, col="red")
+
+  ### plot legends
+  if (legend) {
+    par(fig = c(0, 1, 0.02, (AreaEnd-0.01)),
+        mar = margin, mgp = c(3, 0.5, 0), new=TRUE)
+    plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
+         xlab = "", ylab = "", main = "",
+         xlim = c(0, num_sam), ylim = c(length(tmp_ord), 0),
+         xaxt = "n", yaxt = "n", bty = "n")
+
+    if (!is.null(P) & show_platform) {
+      legend(x = "topright", title = "Platform",
+             ncol = length(platforms_ord), cex = 0.5,
+             legend = platforms_ord,
+             fill = platform_col)
+    }
+
+    if (!is.null(L) & show_ref) {
+      title <- "Ref"
+      if (!is.null(pred) & show_predictions &
+          length(ref_col) == length(pred_col) &
+          all(ref_col %in% pred_col)) {
+        title <- "Classes"
+      }
+      legend(x = "topleft", title = title,
+             ncol = length(classes), cex = 0.5,
+             legend = names(ref_col),
+             fill = ref_col)
+    }
+
+    if (!is.null(pred) & show_predictions &
+        (length(ref_col) != length(pred_col) |
+         any(!ref_col %in% pred_col))) {
+      legend(x = "top", title = "Predictions",
+             ncol = length(unique(pred$max_score)), cex = 0.5,
+             legend = names(pred_col),
+             fill = pred_col)
+    }
+  }
+}
 
 # print object function
 print.multiclassPairs_object <- function(x, ...) {
