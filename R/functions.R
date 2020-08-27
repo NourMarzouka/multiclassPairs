@@ -106,8 +106,8 @@ ReadData <- function(Data,
     Labels_tmp <- as.character(Labels)
 
     if (length(Labels_tmp) != ncol(Data_tmp)) {
-      message(paste("Number of samples:", ncol(Data_tmp)))
-      message(paste("Labels length:", length(Labels_tmp)))
+      message(paste("Number of samples: ", ncol(Data_tmp)))
+      message(paste("Labels length: ", length(Labels_tmp)))
       stop("Labels vector length are not equal to samples in data")
     }
   }
@@ -121,8 +121,8 @@ ReadData <- function(Data,
       Platform_tmp <- as.character(Platform)
 
       if (length(Platform_tmp) != ncol(Data_tmp)) {
-        message(paste("Number of samples:", ncol(Data_tmp)))
-        message(paste("Labels length:", length(Platform_tmp)))
+        message(paste("Number of samples: ", ncol(Data_tmp)))
+        message(paste("Labels length: ", length(Platform_tmp)))
         stop("Platform vector length are not equal to samples in data")
       }
     }
@@ -332,7 +332,7 @@ filter_genes_TSP <- function(data_object,
 
     for (i in groups) {
       if (verbose) {
-        message(paste("Class:",i))
+        message(paste("Class: ",i))
       }
       # wilcoxon test from SwitchBox package
       filtered_genes[[i]] <- SWAP.Filter.Wilcoxon(
@@ -374,12 +374,12 @@ filter_genes_TSP <- function(data_object,
       plat_samples <- plat_vector == y
 
       if (verbose) {
-        message(paste("Platform/study:",y))
+        message(paste("Platform/study: ",y))
       }
 
       for (i in groups) {
         if (verbose) {
-          message(paste("Class:",i))
+          message(paste("Class: ",i))
         }
         # check if this class is there in this platform or not
         tmp_check <- as.character(group_TSP(label = L[plat_samples],
@@ -546,7 +546,7 @@ filter_genes_TSP <- function(data_object,
     if (UpDown == TRUE) {
       for (cl in groups) {
         if (verbose) {
-          message(paste("Get genes for class:",cl))
+          message(paste("Get genes for class: ",cl))
         }
         # create empty df for the up and down
         df <- data.frame(matrix(data = NA,
@@ -606,7 +606,7 @@ filter_genes_TSP <- function(data_object,
     if (UpDown == FALSE) {
       for (cl in groups) {
         if (verbose) {
-          message(paste("Get genes for class:",cl))
+          message(paste("Get genes for class: ",cl))
         }
 
         # create empty df for the up and down
@@ -677,7 +677,7 @@ filter_genes_TSP <- function(data_object,
     for(y in studies) {
       plat_samples <- plat_vector == y
       if (verbose) {
-        message(paste("Platform/study:",y))
+        message(paste("Platform/study: ",y))
         message("Performing Dunn.test...")
       }
       # get data for this platform
@@ -687,7 +687,7 @@ filter_genes_TSP <- function(data_object,
       # because the zeros will be 1s for all samples (after ranking)
       rank_same <- rowSums(D_tmp) == ncol(D_tmp)
       if (sum(rank_same)>0) {
-        message(paste("These features will be removed because they rank the same in all samples from platform:", y))
+        message(paste("These features will be removed because they rank the same in all samples from platform: ", y))
         message(paste(rownames(D_tmp)[rank_same], collapse = " "))
         D_tmp <- D_tmp[rowSums(D_tmp)>ncol(D_tmp),]
       }
@@ -695,7 +695,7 @@ filter_genes_TSP <- function(data_object,
       # Remove genes with NAs in all samples
       remove_na <- rowSums(is.na(D_tmp)) == ncol(D_tmp)
       if (sum(remove_na)>0) {
-        message(paste("These features will be removed because they have NA values in all samples from platform:", y))
+        message(paste("These features will be removed because they have NA values in all samples from platform: ", y))
         message(paste(rownames(D_tmp)[remove_na], collapse = " "))
         D_tmp <- D_tmp[!remove_na,]
       }
@@ -766,7 +766,7 @@ filter_genes_TSP <- function(data_object,
     if (UpDown == TRUE) {
       for (cl in groups) {
         if (verbose) {
-          message(paste("Get genes for class:",cl))
+          message(paste("Get genes for class: ",cl))
         }
         # create empty df for the up and down
         df <- data.frame(matrix(data = NA,
@@ -833,7 +833,7 @@ filter_genes_TSP <- function(data_object,
     if (UpDown == FALSE) {
       for (cl in groups) {
         if (verbose) {
-          message(paste("Get genes for class:",cl))
+          message(paste("Get genes for class: ",cl))
         }
         # create empty df for the up and down
         df <- data.frame(matrix(data = NA,
@@ -987,7 +987,7 @@ train_one_vs_rest_TSP <- function(data_object,
   # train one vs rest classifier for each class
   for (cl in groups) {
     if (verbose) {
-      message(paste("Class:",cl))
+      message(paste("Class: ",cl))
     }
     # get the filtered gene
     genes_cl <- genes[[cl]]
@@ -1063,7 +1063,7 @@ train_one_vs_rest_TSP <- function(data_object,
 
       for (ss in studies) {
         if (verbose) {
-          message(paste("  Scores:",cl,"in platform:",ss))
+          message(paste("  Scores: ",cl,"in platform: ",ss, collapse = " "))
         }
         # skip calculations if there is no samples
         if (sum(plat_vector == ss & L == cl) == 0 |
@@ -1106,7 +1106,7 @@ train_one_vs_rest_TSP <- function(data_object,
 
       for (cl2 in groups[!groups == cl]) {
         if (verbose) {
-          message(paste("  Scores:",cl,"vs",cl2))
+          message(paste("  Scores:",cl,"vs",cl2, collapse = " "))
         }
         # skip calculations if there is no samples
         if (sum(L%in%cl) == 0 |
@@ -1153,7 +1153,7 @@ train_one_vs_rest_TSP <- function(data_object,
       for (ss in studies) {
         for (cl2 in groups[!groups == cl]) {
           if (verbose) {
-            message(paste("  Scores:",cl,"vs",cl2,"in platform:",ss))
+            message(paste("  Scores:",cl,"vs",cl2,"in platform:",ss, collapse = " "))
           }
           # skip calculations if there is no samples
           if (sum(plat_vector == ss & L%in%cl) == 0 |
@@ -1293,7 +1293,7 @@ predict_one_vs_rest_TSP <- function(classifier,
 
   for(cl in classes) {
     if (verbose) {
-      message(paste("Get scores/votes from class:",cl))
+      message(paste("Get scores/votes from class: ",cl))
     }
     c <- classifier$classifiers[[cl]]
 
@@ -1310,7 +1310,7 @@ predict_one_vs_rest_TSP <- function(classifier,
       message("tolerate_missed_genes option is TRUE, so rules containing these genes will be Ignored")
       message(capture.output(cat(paste("Ignore",sum(sum != 2),
                                        "out of",length(sum),
-                                       "rules for this class"))))
+                                       "rules for this class", collapse = " "))))
 
       # subset the classifier
       c$name  <- paste0("TSPs", sum(sum == 2))
@@ -1353,7 +1353,7 @@ predict_one_vs_rest_TSP <- function(classifier,
   if (verbose) {
     if (sum(first != last)>0) {
       message(paste("Score ties found in",sum(first != last),
-                    "out of",ncol(D),"samples in the data"))
+                    "out of",ncol(D),"samples in the data", collapse = " "))
       if (!weighted_votes) {
         message("Turning weighted_votes to TRUE may help to get less ties!")
 
@@ -1582,11 +1582,13 @@ plot_binary_TSP <- function(Data,
   }
 
   # check the length of the platform labels
-  if (nrow(pred) != ncol(D) & !is.null(prediction)) {
-    message("Number of samples in the data: ", ncol(D))
-    message("Number of samples in the prediction: ", ncol(pred))
-    stop("prediction should be for the same data!
+  if (!is.null(prediction)) {
+    if (nrow(pred) != ncol(D)) {
+      message("Number of samples in the data: ", ncol(D))
+      message("Number of samples in the prediction: ", ncol(pred))
+      stop("prediction should be for the same data!
      Use predict_one_vs_rest_TSP to generate it for this data!")
+    }
   }
 
   ### checks ###
@@ -1623,7 +1625,6 @@ plot_binary_TSP <- function(Data,
     stop("Top annotation argument should be character with one of these options:
      ref prediction platform")
   }
-
 
   ### title ###
   if (!is.character(title) | length(title) != 1) {
@@ -1964,7 +1965,7 @@ plot_binary_TSP <- function(Data,
 
     myplot <- plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
                    xlab = "", ylab = "", main = "",
-                   xlim = c(0, num_sam), ylim = c(length(tmp_ord), 0),
+                   xlim = c(0, num_sam), ylim = c(0, length(tmp_ord)),
                    xaxt = "n", yaxt = "n", bty = "n")
 
     if (show_rule_name){
@@ -1995,7 +1996,7 @@ plot_binary_TSP <- function(Data,
         mar = margin, mgp = c(3, 0.5, 0), new=TRUE)
     plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
          xlab = "", ylab = "", main = "",
-         xlim = c(0, num_sam), ylim = c(length(tmp_ord), 0),
+         xlim = c(0, num_sam), ylim = c(0,1),
          xaxt = "n", yaxt = "n", bty = "n")
 
     if (!is.null(P) & show_platform) {
@@ -2020,7 +2021,7 @@ plot_binary_TSP <- function(Data,
 
     if (!is.null(pred) & show_predictions &
         (length(ref_col) != length(pred_col) |
-        any(!ref_col %in% pred_col))) {
+         any(!ref_col %in% pred_col))) {
       legend(x = "top", title = "Predictions",
              ncol = length(unique(pred$max_score)), cex = 0.5,
              legend = names(pred_col),
@@ -2191,10 +2192,10 @@ sort_genes_RF <- function (data_object,
       RF_classifiers[["all"]] <- rf_all
 
       if (verbose) {
-        message("RF: all classes",
-                "| num trees:", num.trees,
-                "| min node size:", min.node.size,
-                "| error:", round(rf_all$prediction.error,3))
+        message(paste("RF: all classes",
+                      "| num trees:", num.trees,
+                      "| min node size:", min.node.size,
+                      "| error:", round(rf_all$prediction.error,3), collapse = " "))
       }
       tmp1 <- sort(rf_all$variable.importance, decreasing = TRUE)
       tmp1 <- names(tmp1)
@@ -2220,10 +2221,10 @@ sort_genes_RF <- function (data_object,
         RF_classifiers[[cl]] <- rfa_cl
 
         if (verbose) {
-          message("RF: class", cl,
-                  "| num trees:", num.trees,
-                  "| min node size:", min.node.size,
-                  "| error:", round(rfa_cl$prediction.error,3))
+          message(paste("RF: class", cl,
+                        "| num trees:", num.trees,
+                        "| min node size:", min.node.size,
+                        "| error:", round(rfa_cl$prediction.error,3), collapse = " "))
         }
         tmp1 <- sort(rfa_cl$variable.importance, decreasing = TRUE)
         tmp1 <- names(tmp1)
@@ -2263,7 +2264,7 @@ sort_genes_RF <- function (data_object,
       plat_samples <- plat_vector == y
       if (verbose) {
         message()
-        message(paste("Platform/study:",y))
+        message(paste("Platform/study: ",y))
       }
       if (featureNo_altogether > 0) {
 
@@ -2277,10 +2278,10 @@ sort_genes_RF <- function (data_object,
         RF_classifiers[[y]][["all"]] <- rf_all
 
         if (verbose) {
-          message("RF: all classes",
-                  "| num trees:", num.trees,
-                  "| min node size:", min.node.size,
-                  "| error:", round(rf_all$prediction.error,3))
+          message(paste("RF: all classes",
+                        "| num trees:", num.trees,
+                        "| min node size:", min.node.size,
+                        "| error:", round(rf_all$prediction.error,3), collapse = " "))
         }
         tmp1 <- sort(rf_all$variable.importance, decreasing = TRUE)
         tmp1 <- names(tmp1)
@@ -2313,10 +2314,10 @@ sort_genes_RF <- function (data_object,
           RF_classifiers[[y]][[cl]] <- rfa_cl
           counter[[cl]] <- c(counter[[cl]], y)
           if (verbose) {
-            message("RF: class", cl,
-                    "| num trees:", num.trees,
-                    "| min node size:", min.node.size,
-                    "| error:", round(rfa_cl$prediction.error,3))
+            message(paste("RF: class", cl,
+                          "| num trees:", num.trees,
+                          "| min node size:", min.node.size,
+                          "| error:", round(rfa_cl$prediction.error,3), collapse = " "))
           }
           tmp1 <- sort(rfa_cl$variable.importance, decreasing = TRUE)
           tmp1 <- names(tmp1)
@@ -2565,7 +2566,8 @@ sort_rules_RF <- function (data_object,
   }
   all_genes <- unique(as.vector(unlist(sorted_genes)))
   if (verbose) {
-    message(length(all_genes),"unique gene will be used for rules production")
+    message(paste(length(all_genes),"unique gene will be used for rules production",
+                  collapse = " "))
   }
   # check if there is enough genes
   if (length(all_genes) < 2) {
@@ -2583,7 +2585,7 @@ sort_rules_RF <- function (data_object,
   }
   pairs     <- combn(all_genes, 2)
   if (verbose) {
-    message(length(pairs)/2,"pairs")
+    message(paste(length(pairs)/2,"pairs", collapse = " "))
     message()
   }
   # get binary matrix for training RF
@@ -2614,10 +2616,10 @@ sort_rules_RF <- function (data_object,
 
       RF_classifiers[["all"]] <- rf_all
       if (verbose) {
-        message("RF: all classes",
-                "| num trees:", num.trees,
-                "| min node size:", min.node.size,
-                "| error:", round(rf_all$prediction.error,3))
+        message(paste("RF: all classes",
+                      "| num trees:", num.trees,
+                      "| min node size:", min.node.size,
+                      "| error:", round(rf_all$prediction.error,3), collapse = " "))
       }
       # order based on the importance
       tmp <- names(sort(rf_all$variable.importance, decreasing = TRUE))
@@ -2641,10 +2643,10 @@ sort_rules_RF <- function (data_object,
 
         RF_classifiers[[cl]] <- rfa_cl
         if (verbose) {
-          message("RF: class", cl,
-                  "| num trees:", num.trees,
-                  "| min node size:", min.node.size,
-                  "| error:", round(rfa_cl$prediction.error,3))
+          message(paste("RF: class", cl,
+                        "| num trees:", num.trees,
+                        "| min node size:", min.node.size,
+                        "| error:", round(rfa_cl$prediction.error,3), collapse = " "))
         }
         # order based on the importance
         tmp <- names(sort(rfa_cl$variable.importance, decreasing = TRUE))
@@ -2688,7 +2690,7 @@ sort_rules_RF <- function (data_object,
       plat_samples <- plat_vector == y
       if (verbose) {
         message()
-        message(paste("Platform/study:",y))
+        message(paste("Platform/study: ",y))
       }
       # run RF for all classes together
       if (run_altogether) {
@@ -2702,10 +2704,10 @@ sort_rules_RF <- function (data_object,
 
         RF_classifiers[[y]][["all"]] <- rf_all
         if (verbose) {
-          message("RF: all classes",
-                  "| num trees:", num.trees,
-                  "| min node size:", min.node.size,
-                  "| error:", round(rf_all$prediction.error,3))
+          message(paste("RF: all classes",
+                        "| num trees:", num.trees,
+                        "| min node size:", min.node.size,
+                        "| error:", round(rf_all$prediction.error,3), collapse = " "))
         }
         tmp1 <- sort(rf_all$variable.importance, decreasing = TRUE)
         tmp1 <- names(tmp1)
@@ -2739,10 +2741,10 @@ sort_rules_RF <- function (data_object,
           RF_classifiers[[y]][[cl]] <- rfa_cl
           counter[[cl]] <- c(counter[[cl]], y)
           if (verbose) {
-            message("RF: class", cl,
-                    "| num trees:", num.trees,
-                    "| min node size:", min.node.size,
-                    "| error:", round(rfa_cl$prediction.error,3))
+            message(paste("RF: class", cl,
+                          "| num trees:", num.trees,
+                          "| min node size:", min.node.size,
+                          "| error:", round(rfa_cl$prediction.error,3), collapse = " "))
           }
           tmp1 <- sort(rfa_cl$variable.importance, decreasing = TRUE)
           tmp1 <- names(tmp1)
@@ -2970,12 +2972,15 @@ train_RF <- function (data_object,
       # let the user know how many rules we collected from all
       if (verbose) {
         message("Altogether rules:")
-        message("available in rules:",
-                length(sorted_rules_RF[[1]]$sorted_rules$all), "rules")
-        message("removing the rules with repeated genes (",
-                gene_repetition,"times allowed ):",
-                ncol(tmp)," rules left")
-        message("get", min(rules_altogether, ncol(tmp)), "rules")
+        message(paste("available rules:",
+                      length(sorted_rules_RF[[1]]$sorted_rules$all), "rules",
+                      collapse = " "))
+        message(paste("removing the rules with repeated genes (",
+                      gene_repetition,"times allowed ):",
+                      ncol(tmp)," rules left",
+                      collapse = " "))
+        message(paste("get", min(rules_altogether, ncol(tmp)), "rules",
+                      collapse = " "))
         message()
       }
       # get the wanted number of rules
@@ -2993,7 +2998,7 @@ train_RF <- function (data_object,
 
       if (is.null(sorted_rules_RF[[1]]$sorted_rules[[cl]])) {
         if (verbose) {
-          message("No rules are available form class:",cl)
+          message("No rules are available form class: ",cl)
           message()
         }
         next
@@ -3013,13 +3018,17 @@ train_RF <- function (data_object,
 
       # let the user know how many rules we collected from all
       if (verbose) {
-        message(cl,"class rules:")
-        message("available in rules:",
-                length(sorted_rules_RF[[1]]$sorted_rules[[cl]]), "rules")
-        message("removing the rules with repeated genes (",
-                gene_repetition,"times allowed )...",
-                ncol(tmp)," rules left")
-        message("get", min(rules_one_vs_rest, ncol(tmp)), "rules")
+        message(paste(cl,"class rules:",
+                      collapse = " "))
+        message(paste("available rules:",
+                      length(sorted_rules_RF[[1]]$sorted_rules[[cl]]), "rules",
+                      collapse = " "))
+        message(paste("removing the rules with repeated genes (",
+                      gene_repetition,"times allowed )...",
+                      ncol(tmp)," rules left",
+                      collapse = " "))
+        message(paste("get", min(rules_one_vs_rest, ncol(tmp)), "rules",
+                      collapse = " "))
         message()
       }
 
@@ -3047,7 +3056,7 @@ train_RF <- function (data_object,
   # give how many unique rules we have after merging
   if (verbose) {
     message("Pooling rules ...")
-    message("There are",nrow(rules),"unique rules after pooling")
+    message(paste("There are",nrow(rules),"unique rules after pooling", collapse = " "))
   }
   # get binary matrix for training RF
   binary    <- D[gene1,] < D[gene2,]
@@ -3077,9 +3086,9 @@ train_RF <- function (data_object,
 
     # let the user know how many rules left
     if (verbose) {
-      message(" Reject",sum(out$finalDecision == "Rejected"),"rules")
-      message(" Use ",sum(out$finalDecision != "Rejected"),
-              "rules for the final RF classifier...")
+      message(paste(" Reject",sum(out$finalDecision == "Rejected"),"rules", collapse = " "))
+      message(paste(" Use ",sum(out$finalDecision != "Rejected"),
+                    "rules for the final RF classifier...", collapse = " "))
     }
 
     if (plot_boruta) {
@@ -3131,12 +3140,12 @@ train_RF <- function (data_object,
                    min.node.size = min.node.size,
                    probability = probability, ...)
   if (verbose) {
-    message("RF: Done!",
-            "| total genes:", length(genes),
-            "| total rules:", nrow(rules),
-            "| num trees:", num.trees,
-            "| min node size:", min.node.size,
-            "| error:", round(rf_all$prediction.error,3))
+    message(paste("RF: Done!",
+                  "| total genes:", length(genes),
+                  "| total rules:", nrow(rules),
+                  "| num trees:", num.trees,
+                  "| min node size:", min.node.size,
+                  "| error:", round(rf_all$prediction.error,3), collapse = " "))
   }
   # store in object
   object_tmp$RF_scheme$genes <- genes
@@ -3203,7 +3212,7 @@ predict_RF <- function(classifier, Data) {
   # Remove genes with NAs
   if (sum(!complete.cases(D)) > 0) {
     message("These genes have NAs:")
-    message(capture.output(cat(rownames(D)[!complete.cases(D)])))
+    message(paste(rownames(D)[!complete.cases(D)], collapse = " "))
     stop("Gene which is used in the classifier should not have NAs")
   }
 
@@ -3437,13 +3446,14 @@ plot_binary_RF <- function(Data,
   }
 
   # check the length of the platform labels
-  if (nrow(pred) != ncol(D) & !is.null(prediction)) {
-    message("Number of samples in the data: ", ncol(D))
-    message("Number of samples in the prediction: ", ncol(pred))
-    stop("Predictions should be for the same data!
+  if (!is.null(prediction)) {
+    if (nrow(pred) != ncol(D)) {
+      message("Number of samples in the data: ", ncol(D))
+      message("Number of samples in the prediction: ", ncol(pred))
+      stop("Predictions should be for the same data!
      Use predict_RF to generate it for this data!")
+    }
   }
-
   ### checks ###
   if (is.null(pred) & is.null(L) & is.null(P)) {
     stop("No available ref, prediction, or platform labels!
@@ -3586,7 +3596,6 @@ plot_binary_RF <- function(Data,
     for(i in groups){
       select_samples <- sam_names[lab==i]
 
-      #tmp_r <- C$classifiers[[i]]$TSPs
       tmp_r <- C$RF_scheme$rules
 
       tmp_binary <- D[tmp_r[,1],select_samples] > D[tmp_r[,2],select_samples]
@@ -3603,8 +3612,8 @@ plot_binary_RF <- function(Data,
   if (cluster_cols & top_anno == "platform") {
 
     # get the rules for all classifiers
-    tmp_r <- data.frame(matrix(NA, ncol = 2, nrow = 0),
-                        stringsAsFactors = FALSE)
+    # tmp_r <- data.frame(matrix(NA, ncol = 2, nrow = 0),
+    #                     stringsAsFactors = FALSE)
 
     tmp_r <- C$RF_scheme$rules
 
@@ -3817,7 +3826,7 @@ plot_binary_RF <- function(Data,
 
   myplot <- plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
                  xlab = "", ylab = "", main = "",
-                 xlim = c(0, num_sam), ylim = c(length(tmp_ord), 0),
+                 xlim = c(0, num_sam), ylim = c(0,length(tmp_ord)),
                  xaxt = "n", yaxt = "n", bty = "n")
 
   if (show_rule_name){
@@ -3833,10 +3842,11 @@ plot_binary_RF <- function(Data,
   }
 
   # put the class name + number of rules
-  axis(2, at = nrow(binary)/2, labels = "All classes",
+  axis(2, at = nrow(binary)/2, labels = paste0("All classes\n",
+                                               nrow(binary), "rules"),
        las = 1, cex.axis = 0.7, tick = 0, adj=1)
-  axis(2, at = (nrow(binary)/2)+1, labels = paste(nrow(binary), "rules"),
-       las = 1, cex.axis = 0.7, tick = 0, adj=1)
+  # axis(2, at = (nrow(binary)/2)+1, labels = paste(nrow(binary), "rules"),
+  #      las = 1, cex.axis = 0.7, tick = 0, adj=1)
 
   box(lwd=1)
 
@@ -3849,7 +3859,7 @@ plot_binary_RF <- function(Data,
         mar = margin, mgp = c(3, 0.5, 0), new=TRUE)
     plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
          xlab = "", ylab = "", main = "",
-         xlim = c(0, num_sam), ylim = c(length(tmp_ord), 0),
+         xlim = c(0, num_sam), ylim = c(0, 1),
          xaxt = "n", yaxt = "n", bty = "n")
 
     if (!is.null(P) & show_platform) {
@@ -3880,6 +3890,392 @@ plot_binary_RF <- function(Data,
              legend = names(pred_col),
              fill = pred_col)
     }
+  }
+}
+
+# coclustering plot for RF training data
+cocluster_RF <- function(object,
+                         classifier,
+                         title = "",
+                         top_anno = c("ref","platform")[1],
+                         classes = NULL,
+                         sam_order = NULL,
+                         ref_col = NULL,
+                         platform_col = NULL,
+                         platforms_ord = NULL,
+                         show_platform = TRUE,
+                         cluster_cols = FALSE,
+                         legend = TRUE,
+                         anno_height = 0.03,
+                         margin = c(0, 5, 0, 5)){
+  ### get classifier ###
+  # check classifier object
+  if (class(classifier)[1] != "rule_based_RandomForest") {
+    stop("classifier should be rule_based_RandomForest object from train_RF function!")
+  }
+
+  ### get data ###
+  # check the object class
+  if (!class(object)[1] == "multiclassPairs_object") {
+    stop("Object should be a multiclassPairs_object from ReadData function!")
+  }
+
+  C       <- classifier$RF_scheme$RF_classifier
+  rules   <- classifier$RF_scheme$rules
+  D       <- object$data$Data
+
+  L       <- object$data$Labels
+  P       <- object$data$Platform
+
+  ### get classes ###
+  tmp_n <- colnames(classifier$RF_scheme$RF_classifier$predictions)
+  if (!is.null(classes)) {
+    # check if all classes are in the classifier object
+    if (any(!classes %in% tmp_n)) {
+      message("These classes are not found in the classifier object:")
+      message(paste0(classes[!classes %in% tmp_n],
+                     collapse = " "))
+      stop("classes names in classes argument should be similar to the names of the classifiers in classifier object!")
+    }
+  } else {
+    # get the classes based on the names in the classifier object
+    classes <- tmp_n
+  }
+
+  #
+  if (is.null(C$inbag.counts)) {
+    stop("call ranger with keep.inbag = TRUE")
+  }
+
+  ### title ###
+  if (!is.character(title) | length(title) != 1) {
+    stop("Title argument should be character input!")
+  }
+
+  ### ref anno colors ###
+  if (!is.null(ref_col)) {
+    if (!is.character(ref_col) | any(!classes %in% names(ref_col))) {
+      stop("ref_col should be named character vector for all classes!")
+    }
+  }
+
+  ### platform anno colors ###
+  if (show_platform & !is.null(P) & !is.null(platform_col)) {
+    if (!is.character(platform_col) | any(!P %in% names(platform_col))) {
+      stop("platform_col should be named character vector for all platforms/studies!")
+    }
+  }
+
+  ### get platforms_ord ###
+  if (!is.null(platforms_ord) & !is.null(P)) {
+    # check if all platforms are in platforms_ord
+    if (any(!platforms_ord %in% P)) {
+      message("These platform/study in platforms_ord are not in found the platform labels:")
+      message(platforms_ord[!platforms_ord %in% P])
+      stop("platforms_ord argument should have similar names of the platforms/studies in the data!")
+    }
+  } else {
+    # get the platforms_ord based on the names in the classifier
+    # object
+    platforms_ord <- unique(P)
+  }
+
+  ### get the same order from the user ###
+  if (!is.null(sam_order)) {
+    if (all(!sam_order %in% colnames(D))) {
+      stop("sam_order argument should have similar names of the samples in the data!")
+    }
+  }
+
+  ### get binary matrix ###
+  binary <- D[rules$gene1, ] < D[rules$gene2, ]
+  rownames(binary) <- paste0(rules$gene1,"__",rules$gene2)
+  binary <- as.data.frame(t(binary))
+
+  #
+  pred  <- predict(C, binary, type = "terminalNodes")$predictions
+  # ntree <- ncol(pred)
+
+  prox  <- data.frame(matrix(NA, nrow(pred), nrow(pred),
+                             dimnames = list(colnames(D), colnames(D))),
+                      stringsAsFactors = FALSE,
+                      check.rows = FALSE,
+                      check.names = FALSE)
+  n     <- nrow(prox)
+
+  # Get inbag counts
+  inbag = simplify2array(C$inbag.counts)
+
+  for (i in 1:n) {
+    for (j in 1:n) {
+      # Use only trees where both obs are OOB
+      tree_idx = inbag[i, ] == 0 & inbag[j, ] == 0
+      prox[i, j] = sum(pred[i, tree_idx] == pred[j, tree_idx]) / sum(tree_idx)
+    }
+  }
+
+  ### colors ###
+  # determine the colors groups_col
+  # thanks to https://stackoverflow.com/questions/15282580/how-to-generate-a-number-of-most-distinctive-colors-in-r
+  xx_colors <- c("#e6194B", "#3cb44b", "#ffe119", "#4363d8", "#f58231",
+                 "#911eb4", "#42d4f4", "#f032e6", "#bfef45", "#fabed4",
+                 "#469990", "#dcbeff", "#9A6324", "#fffac8", "#800000",
+                 "#aaffc3", "#808000", "#ffd8b1", "#000075", "#a9a9a9")
+  xx_colors2 <- c("#aaffc3", "#808000", "#ffd8b1", "#000075", "#a9a9a9",
+                  "#469990", "#dcbeff", "#9A6324", "#fffac8", "#800000",
+                  "#e6194B", "#3cb44b", "#ffe119", "#4363d8", "#f58231",
+                  "#911eb4", "#42d4f4", "#f032e6", "#bfef45", "#fabed4")
+
+  if (is.null(ref_col)) {
+    if (length(classes)<20) {
+      ref_col <- xx_colors[1:length(classes)]
+    } else {
+      ref_col <- sample(xx_colors, size = length(classes), replace = T)
+    }
+    names(ref_col) <- classes
+  }
+
+  if (is.null(platform_col) & !is.null(P)) {
+    # xx_colors2 to give it a bit different colors than the classes
+    if (length(unique(P))<20) {
+      platform_col <- xx_colors2[1:length(unique(P))]
+    } else {
+      platform_col <- sample(xx_colors, size = length(unique(P)), replace = T)
+    }
+    names(platform_col) <- unique(P)
+  }
+
+  ### get info for top_anno ###
+  # find the samples number to be used in the plotting
+  # and get samples' names
+  sam_names <- colnames(prox)
+
+  # get the labels and groups for the top anno
+  if (top_anno == "ref") {
+    lab        <- L
+    groups     <- classes
+    groups_col <- ref_col
+  }
+
+  if (top_anno == "platform") {
+    lab        <- P
+    groups     <- platforms_ord
+    groups_col <- platform_col
+  }
+
+  ### anno ord ###
+  anno_ord <- c("ref", "platform")
+  anno_ord <- anno_ord[c(TRUE, !is.null(P) & show_platform)]
+  anno_ord <- anno_ord[!anno_ord %in% top_anno]
+
+  ### get sample order ###
+  # cluster the samples in each group
+  if (cluster_cols & (top_anno %in% c("ref"))) {
+    tmp <- c()
+    for(i in groups){
+      select_samples <- sam_names[lab==i]
+
+      d   <- dist(t(prox[,select_samples]), method = "euclidean")
+      fit <- hclust(d, method="ward.D2")
+      tmp <- c(tmp, fit$labels[fit$order])
+    }
+
+    sam_ord <- order(match(sam_names, tmp))[1:length(tmp)]
+    rm(tmp)
+  }
+
+  # cluster samples when platform is the top anno
+  if (cluster_cols & top_anno == "platform") {
+
+    tmp <- c()
+    for(i in groups){
+      select_samples <- sam_names[lab==i]
+
+      d   <- dist(t(prox[,select_samples]), method = "euclidean")
+      fit <- hclust(d, method="ward.D2")
+      tmp <- c(tmp, fit$labels[fit$order])
+    }
+
+    sam_ord <- order(match(sam_names, tmp))[1:length(tmp)]
+    rm(tmp)
+  }
+
+  if (!cluster_cols & is.null(sam_order)) {
+    # this will only group samples without clustering
+    # based on the input data
+    sam_ord <- order(match(lab, groups))
+  }
+
+  if (!is.null(sam_order)) {
+    # based on the user order
+    sam_ord <- order(match(sam_names, sam_order))[1:length(sam_order)]
+  }
+
+  # change everything based on the new order
+  # if null then will still be null
+  D         <- D[,sam_ord]
+  L         <- L[sam_ord]
+  P         <- P[sam_ord]
+  lab       <- lab[sam_ord]
+  prox      <- prox[rev(sam_ord),sam_ord]
+
+  sam_names <- sam_names[sam_ord]
+
+  num_sam   <- ncol(D)
+
+
+  # this should be after clustering find where the lines should
+  # be the lines
+  splits <- table(lab)[order(match(names(table(lab)), groups))]
+
+  ### plot top_anno ###
+  {
+    # Subtype annotation
+    AreaStart <- 0.94
+    SizeUnit  <- anno_height
+    Size <- SizeUnit * 1
+    AreaEnd <- AreaStart - Size
+    par(fig = c(0, 1, AreaEnd, AreaStart), mar = margin,
+        mgp = c(3, 0.5, 0), new = FALSE)
+    plot(c(0, 1), c(0, 1), type = "n", xaxs = "i", yaxs = "i",
+         xlab = "", ylab = "", main = "", xlim = c(0, num_sam),
+         ylim = c(0, 1), xaxt = "n", yaxt = "n", bty = "n")
+
+    if (is.null(sam_order)){
+      # headlines
+      text_positions <- cumsum(splits)[1]/2
+      for (i in 1:(length(cumsum(splits)) - 1)) {
+        text_positions <- c(text_positions,
+                            ((cumsum(splits)[i + 1] -
+                                cumsum(splits)[i])/2 +
+                               cumsum(splits)[i]))
+      }
+
+      # smaller headlines
+      mtext(groups, side = 3, line = 0, outer = FALSE, at = text_positions,
+            adj = NA, padj = NA, cex = 0.8, col = groups_col,
+            font = NA)
+    }
+    mtext(title, side = 3, line = -1, outer = TRUE, font = 2)
+
+
+    # draw the subtypes
+    axis(side = 2, at = 0.5,
+         labels = c("ref"="Ref. labels",
+                    "prediction"="Predictions",
+                    "platform"="Platform/Study")[top_anno],
+         las = 1, cex.axis = 0.7, tick = 0)
+    for (f in groups) {
+      for (g in which(lab == f)) {
+        rect(g - 1, 0, g, 1, col = groups_col[f], border = NA)
+      }
+    }
+
+    # the box and the white lines
+    box(lwd = 1)
+    li <- cumsum(splits)
+    abline(v=li, lwd = 1.5, lty=1, col="black")
+  }
+
+  ### plot next annos ###
+  for (i in anno_ord) {
+    {
+      # Subtype annotation
+      Gap      <- 0.0
+      AreaStart<- AreaStart-Size-Gap
+      SizeUnit <- anno_height
+      Size     <- SizeUnit*1
+      AreaEnd  <- AreaStart-Size
+
+      par(fig = c(0, 1, AreaEnd, AreaStart), mar = margin,
+          mgp = c(3, 0.5, 0), new = TRUE)
+      plot(c(0, 1), c(0, 1), type = "n", xaxs = "i", yaxs = "i",
+           xlab = "", ylab = "", main = "", xlim = c(0, num_sam),
+           ylim = c(0, 1), xaxt = "n", yaxt = "n", bty = "n")
+
+      # draw the annotation name
+      axis(side = 2, at = 0.5,
+           labels = c("ref"="Ref. labels",
+                      "platform"="Platform/Study")[i],
+           las = 1, cex.axis = 0.7, tick = 0)
+
+      if (i == "ref") {
+        tmp_color <- ref_col
+        tmp_lab   <- L
+      }
+      if (i == "platform") {
+        tmp_color <- platform_col
+        tmp_lab   <- P
+      }
+
+      for (f in unique(tmp_lab)) {
+        for (g in which(tmp_lab == f)) {
+          rect(g - 1, 0, g, 1, col = tmp_color[f], border = NA)
+        }
+      }
+
+      # the box and the white lines
+      box(lwd = 1)
+      li <- cumsum(splits)
+      abline(v=li, lwd = 1.5, lty=1, col="black")
+    }
+  }
+
+  ### plot binary heatmaps ###
+  # to know the height of the heatmap
+  Size <- AreaEnd-0.08-0.08
+
+  ###
+  Gap       <- 0.005
+  AreaStart <- AreaEnd-Gap
+  AreaEnd   <- AreaStart-Size
+  ###
+
+  par(fig = c(0, 1, AreaEnd, AreaStart),
+      mar = margin, mgp = c(3, 0.5, 0), new=TRUE)
+
+  myplot <- plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
+                 xlab = "", ylab = "", main = "",
+                 xlim = c(0, num_sam), ylim = c(0, num_sam),
+                 xaxt = "n", yaxt = "n", bty = "n")
+
+  HM_colors <- colorRampPalette(c("white","darkblue"))(100)
+
+  prox <- round(prox, 2)
+  prox <- prox*100
+
+  prox <- as.matrix(prox)
+  prox[which(prox<1)]   <- 1
+  prox[which(prox>100)] <- 100
+
+  for(f in 1:ncol(prox)){
+    for(g in 1:nrow(prox)){
+      rect(f-1,g,f,g-1,col=HM_colors[prox[g,f]],border=FALSE,lwd=0)
+    }
+  }
+
+  box(lwd=1)
+
+  ### plot legends
+  if (legend) {
+    par(fig = c(0, 1, 0.02, (AreaEnd-0.01)),
+        mar = margin, mgp = c(3, 0.5, 0), new=TRUE)
+    plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
+         xlab = "", ylab = "", main = "",
+         xlim = c(0, num_sam), ylim = c(0, 1),
+         xaxt = "n", yaxt = "n", bty = "n")
+
+    if (!is.null(P) & show_platform) {
+      legend(x = "topright", title = "Platform/study",
+             ncol = length(platforms_ord), cex = 0.5,
+             legend = platforms_ord,
+             fill = platform_col)
+    }
+
+    legend(x = "topleft", title = "Ref labels",
+           ncol = length(classes), cex = 0.5,
+           legend = names(ref_col),
+           fill = ref_col)
   }
 }
 
@@ -3969,7 +4365,6 @@ print.OnevsrestScheme_TSP <- function(x, ...) {
         }
       }
     }
-    #message()
   }
 
 }

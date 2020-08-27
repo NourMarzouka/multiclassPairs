@@ -7,6 +7,7 @@ import(Boruta)
 import(stats)
 import(utils)
 import(graphics)
+import("grDevices")
 
 importFrom("methods", "hasArg")
 # importFrom("stats", "complete.cases")
@@ -41,6 +42,7 @@ export("predict_RF")
 
 export("plot_binary_TSP")
 export("plot_binary_RF")
+export("cocluster_RF")
 
 # exportPattern("^[[:alpha:]]+")
 # exportPattern("^[^\\.]")

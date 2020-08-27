@@ -9,6 +9,6 @@ License: GPL (>= 2)
 Encoding: UTF-8
 biocViews: Classification
 Depends: R (>= 4.0.0)
-Imports: methods, utils, stats, ranger, Boruta, dunn.test, Biobase, switchBox
+Imports: methods, utils, stats, graphics, grDevices, ranger, Boruta, dunn.test, Biobase, switchBox
 LazyData: true
 RoxygenNote: 7.1.1
