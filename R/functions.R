@@ -4103,7 +4103,8 @@ cocluster_RF <- function(object,
   if (!cluster_cols & is.null(sam_order)) {
     # this will only group samples without clustering
     # based on the input data
-    sam_ord <- order(match(lab, groups))
+    length_sel_groups <- sum(lab %in% groups)
+    sam_ord <- order(match(lab, groups))[1:length_sel_groups]
   }
 
   if (!is.null(sam_order)) {

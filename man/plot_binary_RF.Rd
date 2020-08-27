@@ -49,10 +49,10 @@
     Optional vector with the platform/study labels or any additional annotation. Platform labels in data_object will be used if no platform input provided. For ExpressionSet, the name of the variable in the pheno data.
   }
   \item{classes}{
-    Optional vector with the class names. This will determine which classes will be plotted and in which order.
+    Optional vector with the class names. This will determine which classes will be plotted and in which order. It is not recommended to use both "classes" and "platforms_ord" arguments together.
   }
   \item{platforms_ord}{
-    Optional vector with the platform/study names. This will determine which platform/study will be plotted and in which order. This will be used when top_anno="platform".
+    Optional vector with the platform/study names. This will determine which platform/study will be plotted and in which order. This will be used when top_anno="platform". It is not recommended to use both "classes" and "platforms_ord" arguments together.
   }
   \item{top_anno}{
     Determine the top annotation level. Samples will be grouped based on the top_anno. Input can be one of three options: "ref", "prediction", "platform". Default is "ref".

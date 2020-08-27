@@ -36,7 +36,7 @@ cocluster_RF(object,
     Determine the top annotation level. Samples will be grouped based on the top_anno. Input can be one of two options: "ref", "platform". Default is "ref".
   }
     \item{classes}{
-    Optional vector with the class names. Classes will determine which classes will be plotted and in which order.
+    Optional vector with the class names. Classes will determine which classes will be plotted and in which order. It is not recommended to use both "classes" and "platforms_ord" arguments together.
   }
   \item{sam_order}{
     Optional vector with the samples order in the heatmap.
@@ -48,7 +48,7 @@ cocluster_RF(object,
     optional named vector determines the colors of platforms/study labels. Default is NULL. Vector names should match with the platforms/study labels.
   }
   \item{platforms_ord}{
-    Optional vector with the platform/study names. This will determine which platform/study will be plotted and in which order. This will be used when top_anno="platform".
+    Optional vector with the platform/study names. This will determine which platform/study will be plotted and in which order. This will be used when top_anno="platform". It is not recommended to use both "classes" and "platforms_ord" arguments together.
   }
   \item{show_platform}{
     logical. Determines if the platform/study labels will be plotted or not. If the top_anno argument is "platform" then show_platform will be ignored.
