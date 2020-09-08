@@ -1790,6 +1790,11 @@ plot_binary_TSP <- function(Data,
   # be the lines
   splits <- table(lab)[order(match(names(table(lab)), groups))]
 
+
+  ### to keep the par settings from the user
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
+
   ### plot top_anno ###
   {
     # Subtype annotation
@@ -3652,6 +3657,10 @@ plot_binary_RF <- function(Data,
   # be the lines
   splits <- table(lab)[order(match(names(table(lab)), groups))]
 
+  ### to keep the par settings from the user
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
+
   ### plot top_anno ###
   {
     # Subtype annotation
@@ -4128,6 +4137,10 @@ cocluster_RF <- function(object,
   # this should be after clustering find where the lines should
   # be the lines
   splits <- table(lab)[order(match(names(table(lab)), groups))]
+
+  ### to keep the par settings from the user
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
 
   ### plot top_anno ###
   {
