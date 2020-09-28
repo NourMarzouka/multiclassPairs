@@ -111,4 +111,8 @@ filtered_genes$OnevsrestScheme$filtered_genes$A
 #                                  weighted_votes = TRUE,
 #                                  verbose = FALSE)
 # results
+# Confusion Matrix and Statistics on training data
+# caret::confusionMatrix(data = factor(results$max_score, levels = unique(L)),
+#                        reference = factor(L, levels = unique(L)),
+#                        mode="everything")
 }

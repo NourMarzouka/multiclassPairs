@@ -13,8 +13,8 @@ train_RF(data_object,
           gene_repetition = 1,
           rules_altogether = 200,
           rules_one_vs_rest = 200,
-          run_boruta = TRUE,
-          plot_boruta = TRUE,
+          run_boruta = FALSE,
+          plot_boruta = FALSE,
           boruta_args = list(doTrace = 1),
           num.trees = 500,
           min.node.size = 1,
@@ -41,10 +41,10 @@ integer indicating how many unique rules to be used from altogether slot in the 
 integer indicating how many unique rules to be used from each one_vs_rest slot (class vs rest slots) in the sorted rules object. Default is 200.
 }
   \item{run_boruta}{
-  logical indicates if Boruta algorithm should be run before building the RF model. Boruta will be used to remove the unimportant rules. Default is TRUE.
+  logical indicates if Boruta algorithm should be run before building the RF model. Boruta will be used to remove the unimportant rules. Default is FALSE.
 }
   \item{plot_boruta}{
-   logical indicates if Boruta is allowed to plot importance history plots
+   logical indicates if Boruta is allowed to plot importance history plots. Default is FALSE.
 }
   \item{boruta_args}{
   list of argument to be passed to Boruta algorithm. Default for doTrace argument in Boruta is 1.
@@ -66,13 +66,13 @@ Save ranger.forest object, required for prediction. Default is TRUE. (ranger fun
 Save how often observations are in-bag in each tree. Default is TRUE. (ranger function argument). Needed for co-clustering heatmaps.
 }
   \item{probability}{
-Grow a probability forest as in Malley et al. (2012). Default is TRUE. (ranger function argument). Needed to plot probability scores in the co-clustering heatmaps. If TRUE, when the classifier is used to predict a sample class the user will get "ranger.prediction" object with a matrix with scores for each class. If FALSE, the classifier will give a "ranger.prediction" object with the predicted class without scores for each class.
+Grow a probability forest as in Malley et al. (2012). Default is TRUE. (ranger function argument). Needed to plot probability scores in the binary rules heatmaps. If TRUE, when the classifier is used to predict a sample class the user will get "ranger.prediction" object with a matrix with scores for each class. If FALSE, the classifier will give a "ranger.prediction" object with the predicted class without scores for each class.
 }
   \item{verbose}{
 a logical value indicating whether processing messages will be printed or not. Default is TRUE.
 }
   \item{\dots}{
-any additional arguments to be passed to ranger function (i.e. random forest function) in ranger package. For example, seed for reproducibility.
+any additional arguments to be passed to ranger function (i.e. random forest function) in ranger package. For example, seed for reproducibility. Note, seed argument will be used also for Burota run.
 }
 }
 \details{
@@ -86,8 +86,7 @@ train_RF returns rule_based_RandomForest object which contains the final RF clas
 Nour-al-dain Marzouka <nour-al-dain.marzouka at med.lu.se>
 }
 
-\examples{
-# generate random data
+\examples{# generate random data
 Data <- matrix(runif(10000), nrow=100, ncol=80,
                dimnames = list(paste0("G",1:100), paste0("S",1:80)))
 
@@ -105,32 +104,93 @@ object <- ReadData(Data = Data,
 
 # sort genes
 genes_RF <- sort_genes_RF(data_object = object,
-                           seed=123456, verbose = FALSE)
+                          seed=123456, verbose = FALSE)
 
 # creat and sort rules
-rules_RF <- sort_rules_RF(data_object = object,
-                           sorted_genes_RF = genes_RF,
-                           genes_altogether = 10,
-                           genes_one_vs_rest = 10,
-                           seed=123456, verbose = FALSE)
+# rules_RF <- sort_rules_RF(data_object = object,
+#                           sorted_genes_RF = genes_RF,
+#                           genes_altogether = 100,
+#                           genes_one_vs_rest = 100,
+#                           seed=123456,
+#                           verbose = FALSE)
 
-# train the final model
-# it is prefered to increase the number of trees and rules in case you have
-# large number of samples and features
-# for quick example, we have small number of trees and rules here
-RF_classifier <- train_RF(data_object = object,
-                          rules_altogether = 10,
-                          rules_one_vs_rest = 10,
-                          run_boruta = FALSE,
-                          plot_boruta = FALSE,
-                          num.trees = 300,
-                          sorted_rules_RF = rules_RF,
-                          verbose = FALSE)
+# parameters <- data.frame(
+#   gene_repetition=c(3,2,1),
+#   rules_one_vs_rest=0,
+#   rules_altogether=c(2,3,10),
+#   run_boruta=c(FALSE,"produce_error",FALSE),
+#   plot_boruta = FALSE,
+#   num.trees=c(100,200,300),
+#   stringsAsFactors = FALSE)
 
+# parameters
+
+# test <- optimize_RF(data_object = object,
+#                     sorted_rules_RF = rules_RF,
+#                     test_object = NULL,
+#                     overall = c("Accuracy"),
+#                     byclass = NULL, verbose = FALSE,
+#                     parameters = parameters)
+# test
+# test$summary[which.max(test$summary$Accuracy),]
+#
+# # train the final model
+# # it is preferred to increase the number of trees and rules in case you have
+# # large number of samples and features
+# # for quick example, we have small number of trees and rules here
+# # based on the optimize_RF results we will select the parameters
+# RF_classifier <- train_RF(data_object = object,
+#                           gene_repetition = 1,
+#                           rules_altogether = 0,
+#                           rules_one_vs_rest = 10,
+#                           run_boruta = FALSE,
+#                           plot_boruta = FALSE,
+#                           probability = TRUE,
+#                           num.trees = 300,
+#                           sorted_rules_RF = rules_RF,
+#                           boruta_args = list(),
+#                           verbose = TRUE)
+#
+# # training accuracy
+# # get the prediction labels
+# # if the classifier trained using probability	= FALSE
+# training_pred <- RF_classifier$RF_scheme$RF_classifier$predictions
+# if (is.factor(training_pred)) {
+#   x <- as.character(training_pred)
+# }
+#
+# # if the classifier trained using probability	= TRUE
+# if (is.matrix(training_pred)) {
+#   x <- colnames(training_pred)[max.col(training_pred)]
+# }
+#
+# # training accuracy
+# caret::confusionMatrix(data =factor(x),
+#                 reference = factor(object$data$Labels),
+#                 mode = "everything")
+
+# not to run
+# visualize the binary rules in training dataset
+# plot_binary_RF(Data = object,
+#                classifier = RF_classifier,
+#                prediction = NULL, as_training = TRUE,
+#                show_scores = TRUE,
+#                top_anno = "ref",
+#                show_predictions = TRUE,
+#                title = "Training data")
+
+# not to run
 # predict
-results <- predict_RF(classifier = RF_classifier,
-                       Data = object)
-results
-
-# round(table(results$predictions, object$data$Labels))
+# test_object # any test data
+# results <- predict_RF(classifier = RF_classifier, impute = TRUE,
+#                       Data = test_object)
+#
+# # visualize the binary rules in training dataset
+# plot_binary_RF(Data = test_object,
+#                classifier = RF_classifier,
+#                prediction = results, as_training = FALSE,
+#                show_scores = TRUE,
+#                top_anno = "ref",
+#                show_predictions = TRUE,
+#                title = "Test data")
 }

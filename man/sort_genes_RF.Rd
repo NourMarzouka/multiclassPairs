@@ -69,45 +69,110 @@ returns RandomForest_sorted_genes object which contains sorted genes based on th
 \author{
 Nour-al-dain Marzouka <nour-al-dain.marzouka at med.lu.se>
 }
-\examples{
-# generate random data
-Data <- matrix(runif(100000), nrow=100, ncol=100,
-               dimnames = list(paste0("G",1:100), paste0("S",1:100)))
+\examples{# generate random data
+Data <- matrix(runif(10000), nrow=100, ncol=80,
+               dimnames = list(paste0("G",1:100), paste0("S",1:80)))
 
 # generate random labels
-L <- sample(x = c("A","B","C"), size = 100, replace = TRUE)
+L <- sample(x = c("A","B","C","D"), size = 80, replace = TRUE)
 
 # generate random platform labels
-P <- sample(c("P1","P2"), size = 100, replace = TRUE)
-
-table(P,L)
+P <- sample(c("P1","P2","P3"), size = 80, replace = TRUE)
 
 # create data object
 object <- ReadData(Data = Data,
                    Labels = L,
-                   Platform = P, verbose = FALSE)
+                   Platform = P,
+                   verbose = FALSE)
 
 # sort genes
 genes_RF <- sort_genes_RF(data_object = object,
-                           seed=123456, verbose = FALSE)
-genes_RF
+                          seed=123456, verbose = FALSE)
 
-# not to run
 # creat and sort rules
 # rules_RF <- sort_rules_RF(data_object = object,
 #                           sorted_genes_RF = genes_RF,
-#                           genes_altogether = 10,
-#                           genes_one_vs_rest = 10,
-#                           seed=123456, verbose = FALSE)
+#                           genes_altogether = 100,
+#                           genes_one_vs_rest = 100,
+#                           seed=123456,
+#                           verbose = FALSE)
+
+# parameters <- data.frame(
+#   gene_repetition=c(3,2,1),
+#   rules_one_vs_rest=0,
+#   rules_altogether=c(2,3,10),
+#   run_boruta=c(FALSE,"produce_error",FALSE),
+#   plot_boruta = FALSE,
+#   num.trees=c(100,200,300),
+#   stringsAsFactors = FALSE)
+
+# parameters
+
+# test <- optimize_RF(data_object = object,
+#                     sorted_rules_RF = rules_RF,
+#                     test_object = NULL,
+#                     overall = c("Accuracy"),
+#                     byclass = NULL, verbose = FALSE,
+#                     parameters = parameters)
+# test
+# test$summary[which.max(test$summary$Accuracy),]
 #
 # # train the final model
+# # it is preferred to increase the number of trees and rules in case you have
+# # large number of samples and features
+# # for quick example, we have small number of trees and rules here
+# # based on the optimize_RF results we will select the parameters
 # RF_classifier <- train_RF(data_object = object,
-#                           sorted_rules_RF = rules_RF, verbose = FALSE)
+#                           gene_repetition = 1,
+#                           rules_altogether = 0,
+#                           rules_one_vs_rest = 10,
+#                           run_boruta = FALSE,
+#                           plot_boruta = FALSE,
+#                           probability = T,
+#                           num.trees = 300,
+#                           sorted_rules_RF = rules_RF,
+#                           boruta_args = list(),
+#                           verbose = TRUE)
 #
-# # predict
-# results <- predict_RF(classifier = RF_classifier,
-#                       Data = object)
-# results
+# # training accuracy
+# # get the prediction labels
+# # if the classifier trained using probability	= FALSE
+# training_pred <- RF_classifier$RF_scheme$RF_classifier$predictions
+# if (is.factor(training_pred)) {
+#   x <- as.character(training_pred)
+# }
 #
-# round(table(results$predictions, object$data$Labels))
-}
+# # if the classifier trained using probability	= TRUE
+# if (is.matrix(training_pred)) {
+#   x <- colnames(training_pred)[max.col(training_pred)]
+# }
+#
+# # training accuracy
+# caret::confusionMatrix(data =factor(x),
+#                 reference = factor(object$data$Labels),
+#                 mode = "everything")
+
+# not to run
+# visualize the binary rules in training dataset
+# plot_binary_RF(Data = object,
+#                classifier = RF_classifier,
+#                prediction = NULL, as_training = TRUE,
+#                show_scores = TRUE,
+#                top_anno = "ref",
+#                show_predictions = TRUE,
+#                title = "Training data")
+
+# not to run
+# predict
+# test_object # any test data
+# results <- predict_RF(classifier = RF_classifier, impute = TRUE,
+#                       Data = test_object)
+#
+# # visualize the binary rules in training dataset
+# plot_binary_RF(Data = test_object,
+#                classifier = RF_classifier,
+#                prediction = results, as_training = FALSE,
+#                show_scores = TRUE,
+#                top_anno = "ref",
+#                show_predictions = TRUE,
+#                title = "Test data")}

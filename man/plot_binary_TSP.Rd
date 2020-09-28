@@ -155,6 +155,11 @@ results <- predict_one_vs_rest_TSP(classifier = classifier,
                                   weighted_votes = TRUE,
                                   verbose = FALSE)
 
+# Confusion Matrix and Statistics on training data
+ caret::confusionMatrix(data = factor(results$max_score, levels = unique(L)),
+                        reference = factor(L, levels = unique(L)),
+                        mode="everything")
+
 # not to run
 # plot_binary_TSP(Data = object, classes=c("A","B","C"),
 #                 classifier = classifier,

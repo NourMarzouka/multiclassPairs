@@ -24,7 +24,8 @@ ReadData <- function(Data,
   if (class(Data)[1] == "ExpressionSet") {
 
     # extract the expression matrix from the ExpressionSet
-    Data_tmp <- as.matrix(exprs(Data))
+    # Data_tmp <- as.matrix(exprs(Data))
+    Data_tmp <- as.data.frame(exprs(Data), stringsAsFactors = FALSE)
 
     # if labels are not provided then give the available variables in Eset
     if (!hasArg(Labels)) {
@@ -172,6 +173,15 @@ ReadData <- function(Data,
     }
   }
 
+  # if any labels are NAs then stop
+  if (any(is.na(as.character(Labels_tmp)))) {
+    stop("NAs are not allowed in labels!")
+  }
+
+  if (any(is.na(as.character(Platform_tmp)))) {
+    stop("NAs are not allowed in Platform!")
+  }
+
   # create the object
   object <- list(
     data = list(Data=Data_tmp,
@@ -183,6 +193,7 @@ ReadData <- function(Data,
   return(object)
 }
 
+##### 1-vs-r TSP functions #####
 # function for factorizing the labels
 group_TSP <- function(label, my_group) {
   label    <- as.character(label)
@@ -254,7 +265,8 @@ filter_genes_TSP <- function(data_object,
   if (platform_wise == TRUE) {
     # get the table for classes and platforms
     for_check <- as.data.frame.matrix(table(Platform = data_object$data$Platform,
-                                            Classes  = data_object$data$Labels))
+                                            Classes  = data_object$data$Labels,
+                                            useNA = "ifany"))
 
     # print the table for the user
     if (verbose) {
@@ -1256,7 +1268,8 @@ predict_one_vs_rest_TSP <- function(classifier,
   # if the input Data is ExpressionSet object
   if (class(Data)[1] == "ExpressionSet") {
     # extract the expression matrix from the ExpressionSet
-    D <- as.matrix(exprs(Data))
+    #D <- as.matrix(exprs(Data))
+    D <- as.data.frame(exprs(Data), stringsAsFactors = FALSE)
   }
 
   if (class(Data)[1]  ==  "multiclassPairs_object") {
@@ -1423,7 +1436,8 @@ plot_binary_TSP <- function(Data,
   # if the input Data is ExpressionSet object
   if (class(Data)[1] == "ExpressionSet") {
     # extract the expression matrix from the ExpressionSet
-    D <- as.matrix(exprs(Data))
+    # D <- as.matrix(exprs(Data))
+    D <- as.data.frame(exprs(Data), stringsAsFactors = FALSE)
   }
 
   if (class(Data)[1] == "multiclassPairs_object") {
@@ -2035,6 +2049,7 @@ plot_binary_TSP <- function(Data,
   }
 }
 
+##### RF functions #####
 # Gene filtering using RF
 sort_genes_RF <- function (data_object,
                            featureNo_altogether,
@@ -2385,6 +2400,93 @@ sort_genes_RF <- function (data_object,
   # end
 }
 
+# after sorting genes RF this gives an idea of how many genes you need to use to generate specific number of rules (NOTE without consideration of gene replication in rules, this need to be done after sorting the rules)
+summary_genes_RF <- function(sorted_genes_RF,
+                             genes_altogether,
+                             genes_one_vs_rest) {
+
+  if (class(sorted_genes_RF)[1] != "RandomForest_sorted_genes") {
+    stop("This function requires RandomForest_sorted_genes object!
+              Use sort_genes_RF function to generate it.")
+  }
+
+  if (any(genes_altogether < 0) |
+      !is.numeric(genes_altogether) |
+      length(genes_altogether) != length(genes_one_vs_rest)){
+    stop("genes_altogether should a vector with zero or positive numbers and with the same length of genes_one_vs_rest vector!")
+  }
+
+  if (any(genes_one_vs_rest < 0) |
+      !is.numeric(genes_one_vs_rest) |
+      length(genes_altogether) != length(genes_one_vs_rest)){
+    stop("genes_one_vs_rest should a vector with zero or positive numbers and with the same length of genes_altogether vector!")
+  }
+
+  n_all <- length(sorted_genes_RF[[1]]$sorted_genes$all)
+  n_1_r <- length(sorted_genes_RF[[1]]$sorted_genes[[2]])
+
+  # create empty df to store the results
+
+  results_df <- data.frame(
+    matrix(data = NA,
+           nrow = length(genes_altogether),
+           ncol = 7,
+           dimnames = list(c(1:length(genes_altogether)),
+                           c("genes_altogether_in_object",
+                             "genes_1_vs_r_in_object",
+                             "n_classes",
+                             "from_altogether",
+                             "from_one_vs_rest",
+                             "n_unique_genes",
+                             "n_rules"))),
+    stringsAsFactors = FALSE)
+
+  results_df[ , "genes_altogether_in_object"] <- n_all
+  results_df[ , "genes_1_vs_r_in_object"]     <- n_1_r
+
+  # prepare empty list for the genes
+  empty_list_copy <- vector("list", length(sorted_genes_RF$RF_scheme$sorted_genes))
+  names(empty_list_copy) <- names(sorted_genes_RF$RF_scheme$sorted_genes)
+
+  # get the classes
+  groups <- names(sorted_genes_RF$RF_scheme$sorted_genes)[-1]
+
+  results_df[ , "n_classes"] <- length(groups)
+
+  for (i in 1:length(genes_altogether)) {
+
+    empty_list <- empty_list_copy
+
+    results_df[i,"from_altogether"]  <- genes_alt    <- genes_altogether[i]
+    results_df[i,"from_one_vs_rest"] <- genes_1_vs_R <- genes_one_vs_rest[i]
+
+    if (!is.null(sorted_genes_RF[[1]]$sorted_genes$all)){
+      if (genes_alt > 0) {
+        tmp <- sorted_genes_RF[[1]]$sorted_genes$all
+        tmp <- tmp[1:genes_alt]
+        empty_list$all <- tmp[!is.na(tmp)]
+      }
+    }
+
+    if (genes_1_vs_R > 0) {
+      for (cl in groups) {
+        if (is.null(sorted_genes_RF[[1]]$sorted_genes[[cl]])){
+          next
+        }
+        tmp <- sorted_genes_RF[[1]]$sorted_genes[[cl]]
+        tmp <- tmp[1:genes_1_vs_R]
+        empty_list[[cl]] <- tmp[!is.na(tmp)]
+      }
+    }
+
+    all_genes <- unique(as.vector(unlist(empty_list)))
+
+    results_df[i,"n_unique_genes"] <- length(all_genes)
+    results_df[i,"n_rules"]        <- choose(length(all_genes),2)
+  }
+  return(results_df)
+}
+
 # rules filtering using RF
 sort_rules_RF <- function (data_object,
                            sorted_genes_RF,
@@ -2476,7 +2578,8 @@ sort_rules_RF <- function (data_object,
 
   ### additional checks
   # Warning if wanted filtered genes > than the available genes
-  if (genes_altogether > length(sorted_genes_RF[[1]]$sorted_genes$all)) {
+  if (genes_altogether > length(sorted_genes_RF[[1]]$sorted_genes$all) &
+      run_altogether == TRUE) {
     message("NOTE!")
     message("genes_altogether > number of genes in sorted genes object")
     message("This means all genes in 'all' slot will be used!")
@@ -2485,7 +2588,8 @@ sort_rules_RF <- function (data_object,
 
   # Warning if wanted sorted genes > than the available genes
   tmp <- sapply(sorted_genes_RF[[1]]$sorted_genes[groups], length)
-  if (any(genes_one_vs_rest > tmp)) {
+  if (any(genes_one_vs_rest > tmp) &
+      run_one_vs_rest == TRUE) {
     message("NOTE!")
     message("genes_one_vs_rest > number of genes in sorted genes object")
     message("This means all genes will be used for these classes:")
@@ -2529,6 +2633,7 @@ sort_rules_RF <- function (data_object,
   object_tmp <- list(
     RF_scheme = list(sorted_genes=NULL,
                      sorted_rules=NULL,
+                     gene_repetition=NULL,
                      RF_classifiers=NULL,
                      calls=c()))
   class(object_tmp) <- "RandomForest_sorted_rules"
@@ -2581,7 +2686,7 @@ sort_rules_RF <- function (data_object,
   }
 
   if (length(all_genes) < 2*length(groups)) {
-    message("No enough genes to make rules to seperate all classes!\nCheck the arguments and the sorted genes object!\nTry to increase the number of genes to get enough rules!")
+    message("Maybe there is no enough genes to make rules to seperate all classes!\nCheck the arguments and the sorted genes object!\nTry to increase the number of genes to get enough rules!")
   }
 
   # combine all sorted genes
@@ -2605,8 +2710,9 @@ sort_rules_RF <- function (data_object,
   if (platform_wise == FALSE) {
 
     # make list to store classifiers and rules
-    RF_classifiers <- empty_list
-    sorted_rules <- empty_list
+    RF_classifiers   <- empty_list
+    sorted_rules     <- empty_list
+    gene_repetition  <- empty_list
 
     # run RF for all classes together
     if (run_altogether) {
@@ -2629,9 +2735,23 @@ sort_rules_RF <- function (data_object,
       # order based on the importance
       tmp <- names(sort(rf_all$variable.importance, decreasing = TRUE))
 
-      sorted_rules[["all"]] <- tmp
+      # get the gene repetition in the rules list for altogether
+      times <- matrix(unlist(strsplit(tmp, "__")), nrow = 2, byrow = FALSE)
 
-      rm(tmp)
+      # store the rules as two columns
+      sorted_rules[["all"]] <- data.frame(Gene1=times[1,],
+                                          Gene2=times[2,],
+                                          row.names = tmp,
+                                          stringsAsFactors = FALSE)
+
+      # get the repetition of the genes in the rules
+      times <- ave(times, times, FUN = seq_along)
+      gene_repetition[["all"]] <- data.frame(Gene1=times[1,],
+                                             Gene2=times[2,],
+                                             row.names = tmp,
+                                             stringsAsFactors = FALSE)
+
+      rm(tmp, times)
     }
 
     # run RF for classes separately (One vs Rest)
@@ -2656,16 +2776,31 @@ sort_rules_RF <- function (data_object,
         # order based on the importance
         tmp <- names(sort(rfa_cl$variable.importance, decreasing = TRUE))
 
-        sorted_rules[[cl]] <- tmp
+        # get the gene repetition in the rules list for altogether
+        times <- matrix(unlist(strsplit(tmp, "__")), nrow = 2, byrow = FALSE)
 
-        rm(tmp)
+        # store the rules as two columns
+        sorted_rules[[cl]] <- data.frame(Gene1=times[1,],
+                                         Gene2=times[2,],
+                                         row.names = tmp,
+                                         stringsAsFactors = FALSE)
+
+        # get the repetition of the genes in the rules
+        times <- ave(times, times, FUN = seq_along)
+        gene_repetition[[cl]] <- data.frame(Gene1=times[1,],
+                                            Gene2=times[2,],
+                                            row.names = tmp,
+                                            stringsAsFactors = FALSE)
+
+        rm(tmp, times)
       }
     }
 
-    object_tmp$RF_scheme$sorted_genes <- sorted_genes
-    object_tmp$RF_scheme$sorted_rules <- sorted_rules
-    object_tmp$RF_scheme$RF_classifiers <- RF_classifiers
-    object_tmp$RF_scheme$calls          <- param
+    object_tmp$RF_scheme$sorted_genes    <- sorted_genes
+    object_tmp$RF_scheme$sorted_rules    <- sorted_rules
+    object_tmp$RF_scheme$gene_repetition <- gene_repetition
+    object_tmp$RF_scheme$RF_classifiers  <- RF_classifiers
+    object_tmp$RF_scheme$calls           <- param
     return(object_tmp)
   }
 
@@ -2673,7 +2808,8 @@ sort_rules_RF <- function (data_object,
   if (platform_wise == TRUE) {
 
     # list to store the sorted rules
-    sorted_rules <- empty_list
+    sorted_rules     <- empty_list
+    gene_repetition  <- empty_list
 
     # make list for sorted rules for platform-wise
     plat_rules <- vector("list", length(studies))
@@ -2773,8 +2909,23 @@ sort_rules_RF <- function (data_object,
       tmp2 <- !duplicated(tmp, fromLast = TRUE)
       tmp  <- tmp[tmp2]#[1:rules_altogether]
 
-      # store it in the class genes
-      sorted_rules[["all"]] <- tmp
+      # get the gene repetition in the rules list for altogether
+      times <- matrix(unlist(strsplit(tmp, "__")), nrow = 2, byrow = FALSE)
+
+      # store the rules as two columns
+      sorted_rules[["all"]] <- data.frame(Gene1=times[1,],
+                                          Gene2=times[2,],
+                                          row.names = tmp,
+                                          stringsAsFactors = FALSE)
+
+      # get the repetition of the genes in the rules
+      times <- ave(times, times, FUN = seq_along)
+      gene_repetition[["all"]] <- data.frame(Gene1=times[1,],
+                                             Gene2=times[2,],
+                                             row.names = tmp,
+                                             stringsAsFactors = FALSE)
+
+      rm(tmp, times)
     } # otherwise it is already NULL
 
     # fill one vs rest for each class
@@ -2797,21 +2948,257 @@ sort_rules_RF <- function (data_object,
 
         tmp <- tmp[tmp2]#[1:rules_one_vs_rest]
 
-        # store it in the class genes
-        sorted_rules[[cl]] <- tmp
+        # get the gene repetition in the rules list for altogether
+        times <- matrix(unlist(strsplit(tmp, "__")), nrow = 2, byrow = FALSE)
+
+        # store the rules as two columns
+        sorted_rules[[cl]] <- data.frame(Gene1=times[1,],
+                                         Gene2=times[2,],
+                                         row.names = tmp,
+                                         stringsAsFactors = FALSE)
+
+        # get the repetition of the genes in the rules
+        times <- ave(times, times, FUN = seq_along)
+        gene_repetition[[cl]] <- data.frame(Gene1=times[1,],
+                                            Gene2=times[2,],
+                                            row.names = tmp,
+                                            stringsAsFactors = FALSE)
+
+        rm(tmp, times)
+
       }
     } # otherwise it is already NULL for each class
 
     # fill the object
-    object_tmp$RF_scheme$sorted_genes <- sorted_genes
-    object_tmp$RF_scheme$sorted_rules   <- sorted_rules
-    object_tmp$RF_scheme$RF_classifiers <- RF_classifiers
-    object_tmp$RF_scheme$calls          <- param
+    object_tmp$RF_scheme$sorted_genes       <- sorted_genes
+    object_tmp$RF_scheme$sorted_rules       <- sorted_rules
+    object_tmp$RF_scheme$gene_repetition    <- gene_repetition
+    object_tmp$RF_scheme$RF_classifiers     <- RF_classifiers
+    object_tmp$RF_scheme$calls              <- param
     return(object_tmp)
   }
 
   # end
 }
+
+# function to optimize RF parameters
+optimize_RF <- function(data_object,
+                        sorted_rules_RF,
+                        parameters,
+                        overall=c("Accuracy","Kappa",
+                                  "AccuracyLower","AccuracyUpper",
+                                  "AccuracyNull","AccuracyPValue"
+                                  ,"McnemarPValue")[1:2],
+                        byclass=c("Sensitivity","Specificity",
+                                  "Pos Pred Value","Neg Pred Value",
+                                  "Precision","Recall",
+                                  "F1","Prevalence",
+                                  "Detection Rate","Detection Prevalence",
+                                  "Balanced Accuracy")[c(11)],
+                        seed = 123456,
+                        test_object = NULL,
+                        impute = TRUE,
+                        impute_reject = 0.67,
+                        verbose = FALSE) {
+
+  ### Checks
+  if (class(data_object)[1] != "multiclassPairs_object") {
+    stop("data_object argument requires multiclassPairs_object!
+  Use ReadData function to generate it.")
+  }
+
+  if (class(sorted_rules_RF)[1] != "RandomForest_sorted_rules") {
+    stop("This function requires RandomForest_sorted_rules object!
+  Use filter_rules_RF function to generate it.")
+  }
+
+  if (class(test_object)[1] != "multiclassPairs_object" & !is.null(test_object)) {
+    stop("test_object requires multiclassPairs_object!
+  Use ReadData function to generate it.
+  If test_object is NULL then the same training data will be used.
+")
+  }
+
+  if (!is.data.frame(parameters)) {
+    stop("parameters should be a dataframe with column names match argument names in train_RF function!")
+  }
+
+  # overall
+  if (any(!overall%in%c("Accuracy","Kappa",
+                        "AccuracyLower","AccuracyUpper",
+                        "AccuracyNull","AccuracyPValue"
+                        ,"McnemarPValue"))) {
+    stop("overall argument should be a vector with one or more of these variables:
+         c('Accuracy','Kappa',
+         'AccuracyLower','AccuracyUpper','AccuracyNull',
+         'AccuracyPValue','McnemarPValue')")
+  }
+
+  # by class
+  if (any(!byclass%in%c("Sensitivity","Specificity",
+                        "Pos Pred Value","Neg Pred Value",
+                        "Precision","Recall",
+                        "F1","Prevalence",
+                        "Detection Rate","Detection Prevalence",
+                        "Balanced Accuracy"))) {
+    stop("byclass argument should be a vector with one or more of these variables:
+         c('Sensitivity','Specificity',
+           'Pos Pred Value','Neg Pred Value',
+           'Precision','Recall',
+           'F1','Prevalence',
+           'Detection Rate','Detection Prevalence',
+           'Balanced Accuracy')")
+  }
+
+  # get the classes
+  groups <- unique(data_object$data$Labels)
+
+  #### prepare output summary df
+  # calculate how many columns and row we need for the results df
+  # nrow is same  of parameters
+  nr <- nrow(parameters)
+
+  # row names
+  r_nam <- paste0("Trial_",1:nr)
+
+  # columns should be parameters then n_gene, n_rules then overall things then by class
+  # get the col names
+  c_nam <- colnames(parameters)
+  to_add <- c("n_genes","n_rules", overall,
+              as.vector(outer(groups, byclass, paste, sep=".")))
+  c_nam <- c(c_nam, to_add)
+  nc <- length(c_nam)
+
+  # create the summary df
+  out_df <- data.frame(matrix(NA,
+                              nrow = nr,
+                              ncol = nc,
+                              dimnames = list(c(r_nam),
+                                              c(c_nam))),
+                       check.names = FALSE)
+
+  out_df[,colnames(parameters)] <- parameters
+
+
+  ##### prepare the output object
+  # prepare list for confusion matrices and df
+  res_list <- list(summary=NULL,
+                   confusionMatrix = vector("list", nr),
+                   errors = vector("list", nr),
+                   calls = match.call())
+  names(res_list$confusionMatrix) <- r_nam
+  names(res_list$errors) <- r_nam
+
+  class(res_list) <- "optimize_RF_output"
+
+  # print message about the seed
+  if(verbose){
+    if (is.null(seed)) {
+      message("seed is NULL! It is recommended to use a seed to have reproducible results!")
+    } else {
+      message("Used seed is ",seed)
+    }
+  }
+
+  # for loop for the trials
+  for (i in 1:nrow(parameters)) {
+    print(paste("Trial:",i))
+
+    # get arguments
+    args1 <- as.list(parameters[i,])
+    args2 <- list(data_object = data_object,
+                  sorted_rules_RF = sorted_rules_RF)
+    args  <- c(args2,args1)
+    args["verbose"] <- verbose
+    args["seed"]    <- seed
+
+    # train
+    RF_classifier <- try(do.call(train_RF, args))
+
+    if (any(class(RF_classifier)=="try-error") |
+        any(class(RF_classifier)!="rule_based_RandomForest")) {
+      # some code to store that there is an error
+      out_df[i,to_add] <- "error"
+      res_list$errors[[i]] <- RF_classifier
+      message("Error produced by this trial... skip trial number ",i)
+      next()
+    }
+
+    # get the number of rules and genes in the model
+    out_df[i,"n_genes"] <- length(RF_classifier$RF_scheme$genes)
+    out_df[i,"n_rules"] <- nrow(RF_classifier$RF_scheme$rules)
+
+    # predict on test data
+    # if the user input a different test data
+    if (!is.null(test_object)) {
+
+      pred <- predict_RF(classifier = RF_classifier,
+                         Data = test_object,
+                         impute = TRUE,
+                         verbose = verbose,
+                         impute_reject = impute_reject)
+
+      pred    <- pred$predictions
+
+      # in case some samples were rejected due to the imputation
+      # get sample names
+      if (is.factor(pred)) {
+        wanted_sam <- names(pred)
+      }
+      if (is.matrix(pred)){
+        wanted_sam <- rownames(pred)
+      }
+
+      # get the ref labels for these samples
+      wanted_sam <- order(match(colnames(test_object$data$Data),
+                                wanted_sam))[1:length(wanted_sam)]
+      ref_lab <- test_object$data$Labels[wanted_sam]
+
+    } else {
+
+      # get the training predictions
+      pred    <- RF_classifier$RF_scheme$RF_classifier$predictions
+      ref_lab <- data_object$data$Labels
+    }
+
+    # get the prediction labels
+    # if the classifier trained using probability	= FALSE
+    if (is.factor(pred)) {
+      pred <- as.character(pred)
+    }
+
+    # if the classifier trained using probability	= TRUE
+    if (is.matrix(pred)) {
+      pred <- colnames(pred)[max.col(pred)]
+    }
+
+    # produce the confusion matrix by Caret package
+    con <- confusionMatrix(data =factor(pred,
+                                        levels = groups),
+                           reference = factor(ref_lab,
+                                              levels = groups),
+                           mode = "everything")
+
+    res_list$confusionMatrix[[i]] <- con
+
+    for (o in overall) {
+      out_df[i,o] <- con$overall[[o]]
+    }
+
+    for (b in byclass) {
+      for (cl in groups) {
+        out_df[i,paste(cl,b, sep = ".")] <- con$byClass[paste("Class:",cl),b]
+      }
+    }
+
+    rm(RF_classifier)
+  }
+
+  res_list$summary <- out_df
+  res_list$summary$seed <- seed
+  return(res_list)
+}
+
 
 # train RF classifier
 train_RF <- function (data_object,
@@ -2821,8 +3208,8 @@ train_RF <- function (data_object,
                       rules_altogether = 200,
                       rules_one_vs_rest = 200,
 
-                      run_boruta = TRUE,
-                      plot_boruta = TRUE,
+                      run_boruta = FALSE,
+                      plot_boruta = FALSE,
                       boruta_args = list(doTrace = 1),
 
                       num.trees = 500,
@@ -2936,6 +3323,7 @@ train_RF <- function (data_object,
   object_tmp <- list(
     RF_scheme = list(genes=NULL,
                      rules=NULL,
+                     mode=NULL,
                      boruta=NULL,
                      RF_classifier=NULL,
                      calls=c()))
@@ -2963,36 +3351,37 @@ train_RF <- function (data_object,
 
       # from all
       tmp <- sorted_rules_RF[[1]]$sorted_rules$all
-      tmp <- matrix(unlist(strsplit(tmp, "__")), nrow = 2, byrow = FALSE)
+      #tmp <- matrix(unlist(strsplit(tmp, "__")), nrow = 2, byrow = FALSE)
 
       # get the repetition of the genes in the rules
-      times <- ave(tmp, tmp, FUN = seq_along)
+      #times <- ave(tmp, tmp, FUN = seq_along)
+      times <- sorted_rules_RF[[1]]$gene_repetition$all
 
       # keep only genes repeated specific number of times
-      keep <- as.integer(times[1,]) <= gene_repetition &
-        as.integer(times[2,]) <= gene_repetition
+      keep <- as.integer(times[,1]) <= gene_repetition &
+        as.integer(times[,2]) <= gene_repetition
 
-      tmp <- tmp[,keep, drop=FALSE]
+      tmp <- tmp[keep, , drop=FALSE]
 
       # let the user know how many rules we collected from all
       if (verbose) {
         message("Altogether rules:")
         message(paste("available rules:",
-                      length(sorted_rules_RF[[1]]$sorted_rules$all), "rules",
+                      nrow(sorted_rules_RF[[1]]$sorted_rules$all), "rules",
                       collapse = " "))
         message(paste("removing the rules with repeated genes (",
                       gene_repetition,"times allowed ):",
-                      ncol(tmp)," rules left",
+                      nrow(tmp),"rules left",
                       collapse = " "))
-        message(paste("get", min(rules_altogether, ncol(tmp)), "rules",
+        message(paste("get", min(rules_altogether, nrow(tmp)), "rules",
                       collapse = " "))
         message()
       }
       # get the wanted number of rules
-      tmp <- tmp[,1:min(rules_altogether, ncol(tmp))]
+      tmp <- tmp[1:min(rules_altogether, nrow(tmp)),]
 
       # get
-      rules <- rbind(rules, t(tmp))
+      rules <- rbind(rules, tmp)
       rm(tmp)
     }
   }
@@ -3010,39 +3399,39 @@ train_RF <- function (data_object,
       }
 
       tmp <- sorted_rules_RF[[1]]$sorted_rules[[cl]]
-      tmp <- matrix(unlist(strsplit(tmp, "__")), nrow = 2, byrow = FALSE)
+      #tmp <- matrix(unlist(strsplit(tmp, "__")), nrow = 2, byrow = FALSE)
 
       # get the repetition of the genes in the rules
-      times <- ave(tmp, tmp, FUN = seq_along)
+      #times <- ave(tmp, tmp, FUN = seq_along)
+      times <- sorted_rules_RF[[1]]$gene_repetition[[cl]]
 
       # keep only genes repeated specific number of times
-      keep <- as.integer(times[1,]) <= gene_repetition &
-        as.integer(times[2,]) <= gene_repetition
+      keep <- as.integer(times[,1]) <= gene_repetition &
+        as.integer(times[,2]) <= gene_repetition
 
-      tmp <- tmp[,keep, drop=FALSE]
+      tmp <- tmp[keep, , drop=FALSE]
 
       # let the user know how many rules we collected from all
       if (verbose) {
         message(paste(cl,"class rules:",
                       collapse = " "))
         message(paste("available rules:",
-                      length(sorted_rules_RF[[1]]$sorted_rules[[cl]]), "rules",
+                      nrow(sorted_rules_RF[[1]]$sorted_rules[[cl]]), "rules",
                       collapse = " "))
         message(paste("removing the rules with repeated genes (",
                       gene_repetition,"times allowed )...",
-                      ncol(tmp)," rules left",
+                      nrow(tmp)," rules left",
                       collapse = " "))
-        message(paste("get", min(rules_one_vs_rest, ncol(tmp)), "rules",
+        message(paste("get", min(rules_one_vs_rest, nrow(tmp)), "rules",
                       collapse = " "))
         message()
       }
 
       # get the wanted number of rules
-      tmp <- tmp[,1:min(rules_one_vs_rest, ncol(tmp))]
+      tmp <- tmp[1:min(rules_one_vs_rest, nrow(tmp)),]
 
       # get
-      rules <- rbind(rules, t(tmp))
-
+      rules <- rbind(rules, tmp)
     }
   }
 
@@ -3050,19 +3439,34 @@ train_RF <- function (data_object,
   # thanks for https://stackoverflow.com/a/25298863
   rules <- rules[!duplicated(data.frame(list(do.call(pmin,rules),
                                              do.call(pmax,rules)))),]
-  gene1 <- rules$V1
-  gene2 <- rules$V2
+
+  gene1 <- rules[,1]
+  gene2 <- rules[,2]
+
+  for_flip <- rowSums(D[gene1,] < D[gene2,])
+  for_flip <- for_flip > (ncol(D)/2)
+
+  from1 <- gene1[for_flip]
+  from2 <- gene2[for_flip]
+
+  gene1[for_flip] <- from2
+  gene2[for_flip] <- from1
 
   # store the genes and rules
   genes <- unique(c(gene1,gene2))
-  rules <- cbind(gene1, gene2,
+  rules <- cbind(gene1,
+                 gene2,
                  rule=paste0(gene1,"<",gene2))
 
   # give how many unique rules we have after merging
   if (verbose) {
     message("Pooling rules ...")
-    message(paste("There are",nrow(rules),"unique rules after pooling", collapse = " "))
+    message(paste("There are",
+                  nrow(rules),
+                  "unique rules after pooling",
+                  collapse = " "))
   }
+
   # get binary matrix for training RF
   binary    <- D[gene1,] < D[gene2,]
   rownames(binary) <- paste0(gene1,"__",gene2)
@@ -3085,15 +3489,19 @@ train_RF <- function (data_object,
       set.seed(list(...)[["seed"]])
     }
 
-    out <- Boruta(x = t(binary),
-                  y =  factor(L, levels = unique(L)),
-                  unlist(boruta_args))
+    args_bor <- list(x = t(binary),
+                     y =  factor(L, levels = unique(L)))
+    args_bor  <- c(args_bor, boruta_args)
+    out <- do.call(Boruta, args_bor)
 
     # let the user know how many rules left
     if (verbose) {
-      message(paste(" Reject",sum(out$finalDecision == "Rejected"),"rules", collapse = " "))
+      message(paste(" Reject",sum(out$finalDecision == "Rejected"),"rules",
+                    collapse = " "))
+
       message(paste(" Use ",sum(out$finalDecision != "Rejected"),
-                    "rules for the final RF classifier...", collapse = " "))
+                    "rules for the final RF classifier...",
+                    collapse = " "))
     }
 
     if (plot_boruta) {
@@ -3152,10 +3560,27 @@ train_RF <- function (data_object,
                   "| min node size:", min.node.size,
                   "| error:", round(rf_all$prediction.error,3), collapse = " "))
   }
+
+  # store the "centroids" to be used to impute missing values in testing data
+  #Get the most common value function
+  getmode <- function(v) {
+    uniqv <- unique(v)
+    uniqv[which.max(tabulate(match(v, uniqv)))]
+  }
+
+  #Get the most common value for each class (groups) Get it from the TRAINING_LABELS vector
+  ModeVector <- lapply(groups,function(x){
+    apply(binary[, which(L==x)], 1, getmode)
+  })
+  names(ModeVector) <- groups
+  ModeVector <- do.call("cbind", ModeVector)
+
+
   # store in object
   object_tmp$RF_scheme$genes <- genes
   object_tmp$RF_scheme$rules <- data.frame(rules,
                                            stringsAsFactors = FALSE)
+  object_tmp$RF_scheme$mode <- ModeVector
   object_tmp$RF_scheme$RF_classifier <- rf_all
   object_tmp$RF_scheme$calls <- param
 
@@ -3163,7 +3588,11 @@ train_RF <- function (data_object,
 }
 
 # predict function for RF
-predict_RF <- function(classifier, Data) {
+predict_RF <- function(classifier,
+                       Data,
+                       impute = FALSE,
+                       impute_reject=0.67,
+                       verbose = TRUE) {
 
   # check the object class
   if (!class(Data)[1] %in% c("multiclassPairs_object",
@@ -3179,6 +3608,13 @@ predict_RF <- function(classifier, Data) {
     stop("classifier should be rule_based_RandomForest object from train_RF function!")
   }
 
+  if (!is.numeric(impute_reject) |
+      !length(impute_reject) == 1 |
+      any(impute_reject >= 1) |
+      any(impute_reject <= 0)) {
+    stop("impute_reject argument should be a number between 0 and 1!")
+  }
+
   # get the data matrix
   if (is.data.frame(Data)) {
     D <- Data
@@ -3191,7 +3627,7 @@ predict_RF <- function(classifier, Data) {
   # if the input Data is ExpressionSet object
   if (class(Data)[1] == "ExpressionSet") {
     # extract the expression matrix from the ExpressionSet
-    D <- as.matrix(exprs(Data))
+    D <- as.data.frame(exprs(Data), stringsAsFactors = FALSE)
   }
 
   if (class(Data)[1]  ==  "multiclassPairs_object") {
@@ -3204,40 +3640,172 @@ predict_RF <- function(classifier, Data) {
 
   # check if all genes are in the data
   if (any(!genes %in% rownames(D))) {
-    message("These genes are not found in the data:")
-    message(capture.output(cat(genes[!genes %in% rownames(D)])))
-    message("Gene names should as rownames")
-    message("Check the genes in classifier object to see all the needed genes")
-    stop("All genes should be in the data!")
+
+    if (verbose){
+      message("These genes are not found in the data:")
+      message(capture.output(cat(genes[!genes %in% rownames(D)])))
+      message("Gene names should as rownames and sample names as columns!")
+      message("Check the genes in classifier object to see all the needed genes.")
+    }
+
+    if (impute == FALSE) {
+      stop("All genes should be in the data with no NA values! Or you can turn impute argument to TRUE to impute missed genes to the closest class for each sample!")
+    }
+
+    if (impute == TRUE & verbose) {
+      message("Missed genes will be imputed to the closest class for each sample!")
+    }
   }
 
-  # subset the data based on the needed genes
-  D <- D[genes,]
+  # create empty matrix for the data
+  complete <- data.frame(matrix(data = NA,
+                                nrow = length(genes),
+                                ncol = ncol(D),
+                                dimnames = list(genes, colnames(D))),
+                         check.names = FALSE,
+                         stringsAsFactors = FALSE)
+
+  # fill it with data
+  found <- genes[genes %in% rownames(D)]
+  complete[found,colnames(D)] <- D[found,]
 
   # Remove genes with NAs
-  if (sum(!complete.cases(D)) > 0) {
-    message("These genes have NAs:")
-    message(paste(rownames(D)[!complete.cases(D)], collapse = " "))
-    stop("Gene which is used in the classifier should not have NAs")
+  if (sum(!complete.cases(complete)) > 0) {
+    if (verbose){
+      message("These genes have NAs:")
+      message(paste(rownames(complete)[!complete.cases(complete)],
+                    collapse = " "))
+    }
+
+    if (impute == FALSE) {
+      message("Turn impute to TRUE to impute NAs to the closest class for each sample with NAs!")
+      stop("Gene which is used in the classifier should not have NAs!")
+    }
+
+    if (impute == TRUE & verbose) {
+      message("These genes will be imputed to the closest class for each sample with NAs")
+    }
   }
 
   # produce the binary matrix
-  binary <- D[rules$gene1,] < D[rules$gene2,]
+  binary <- complete[rules$gene1,] < complete[rules$gene2,]
   rownames(binary) <- paste0(rules$gene1,
                              "__",
                              rules$gene2)
 
+
+  #Impute if needed
+  if (impute) {
+    # get the mode values from the training data - stored in the classifier object
+    mode_df <- classifier$RF_scheme$mode
+
+    # to store the index for the samples to be removed
+    # due to lack of a lot of rules
+    to_remove_sam <- c()
+
+    for(i in 1:ncol(binary)){
+
+      # get which rules are missed in this sample
+      is_na <- is.na(binary[,i])
+
+      # if everything is OK then go to the next sample
+      if (sum(is_na) == 0) {
+        next
+      }
+
+      # skip the sample if it misses >0.67 of rules
+      if (sum(is_na) > (nrow(binary)*impute_reject)) {
+        to_remove_sam <- c(to_remove_sam,i)
+        next()
+      } else {
+        # give warning if the sample misses >0.5 of the rules
+        if (sum(is_na) > (nrow(binary)*0.5) & verbose) {
+          message("More than the half of the rules need imputation for this sample:")
+          message(colnames(binary)[i])
+          message("This could affect the prediction accuracy for this sample!")
+        }
+      }
+
+      # remove the NAs before find the dist
+      ok_rules <- names(which(is_na==FALSE))
+      sam      <- binary[ok_rules,i, drop=FALSE]
+
+      dist_mat <- as.matrix(dist(t(cbind(sam, mode_df[ok_rules,])),
+                                 method="binary"))
+
+      # remove the first because it is the sample itself
+      closest  <- which.min(dist_mat[-1,1])
+      closest  <- names(closest)[1]
+
+      # get the rules those need imputation for this sample
+      impute_rules <- names(which(is_na==TRUE))
+
+      # get the mode values as imputations
+      binary[impute_rules, i] <- mode_df[impute_rules, closest]
+    }
+
+    # tell the user that we skipped these samples
+    if (length(to_remove_sam)>0) {
+      message("#####")
+      message("More than two thirds of the rules are missed in ",
+              length(to_remove_sam),
+              " sample(s), because of that these sample(s) were removed from the prediction:")
+      message(paste0(colnames(binary)[to_remove_sam],
+                     collapse = " "))
+      message("#####")
+
+      binary  <- binary[,-to_remove_sam, drop=FALSE]
+    }
+
+    if (any(dim(binary)== 0)) {
+      stop("No samples left!")
+    }
+  }
+
+  # predict by original ranger function
   results <- predict(classifier[[1]]$RF_classifier,
                      data = t(binary))
 
+  # give the prediction the sample names
+  if (is.matrix(results$predictions)) {
+    rownames(results$predictions) <- colnames(binary)
+
+    # get the highest score
+    pred <- as.data.frame(results$predictions, stringsAsFactors = FALSE)
+
+    # get the prediction labels
+    results$predictions_classes <- colnames(pred)[max.col(pred,
+                                                          ties.method = "first")]
+
+    names(results$predictions_classes) <- rownames(results$predictions)
+
+    # to generate warnings if there is ties
+    first <- colnames(pred)[max.col(pred,
+                                    ties.method = "first")]
+    last  <- colnames(pred)[max.col(pred,
+                                    ties.method = "last")]
+    if (sum(first != last)>0) {
+      message(paste("Score ties were found in", sum(first != last),
+                    "out of",nrow(pred),"samples in the data",
+                    collapse = " "))
+
+    }
+  }
+
+  if (is.factor(results$predictions)) {
+    names(results$predictions) <- colnames(binary)
+  }
+  #
   return(results)
 }
+
 
 # plot binary for classifier based on binary RF scheme
 plot_binary_RF <- function(Data,
                            classifier,
                            ref = NULL,
                            prediction = NULL,
+                           as_training = FALSE,
                            platform = NULL,
                            classes = NULL,
                            platforms_ord = NULL,
@@ -3289,7 +3857,8 @@ plot_binary_RF <- function(Data,
   # if the input Data is ExpressionSet object
   if (class(Data)[1] == "ExpressionSet") {
     # extract the expression matrix from the ExpressionSet
-    D <- as.matrix(exprs(Data))
+    # D <- as.matrix(exprs(Data))
+    D <- as.data.frame(exprs(Data), stringsAsFactors = FALSE)
   }
 
   if (class(Data)[1] == "multiclassPairs_object") {
@@ -3302,7 +3871,13 @@ plot_binary_RF <- function(Data,
   }
 
   ### get classes ###
-  tmp_n <- colnames(classifier$RF_scheme$RF_classifier$predictions)
+  if (is.matrix(classifier$RF_scheme$RF_classifier$predictions)) {
+    tmp_n <- colnames(classifier$RF_scheme$RF_classifier$predictions)
+  }
+  if (is.factor(classifier$RF_scheme$RF_classifier$predictions)) {
+    tmp_n <- levels(classifier$RF_scheme$RF_classifier$predictions)
+  }
+
   if (!is.null(classes)) {
     # check if all classes are in the classifier object
     if (any(!classes %in% tmp_n)) {
@@ -3358,6 +3933,12 @@ plot_binary_RF <- function(Data,
     }
   }
 
+  # no ref labels if the user did not input ref and the input
+  # is not multiclassPairs_object
+  if (is.null(ref) & class(Data)[1] != "multiclassPairs_object") {
+    L <- NULL
+  }
+
   # check the length of the ref labels
   if (length(L) != ncol(D) & !is.null(ref)) {
     message("Number of samples: ", ncol(D))
@@ -3365,13 +3946,6 @@ plot_binary_RF <- function(Data,
     stop("Labels vector length are not equal to
        samples in data")
   }
-
-  # no ref labels if the user did not input ref and the input
-  # is not multiclassPairs_object
-  if (!is.null(ref) & class(Data)[1] != "multiclassPairs_object") {
-    L <- NULL
-  }
-
 
   ### get Platform labels ###
   # if the data is object
@@ -3410,18 +3984,18 @@ plot_binary_RF <- function(Data,
     }
   }
 
+  # no platform labels if the user did not input platform and
+  # the input is not multiclassPairs_object
+  if (is.null(platform) & class(Data)[1] != "multiclassPairs_object") {
+    P <- NULL
+  }
+
   # check the length of the platform labels
   if (length(P) != ncol(D) & !is.null(platform)) {
     message("Number of samples: ", ncol(D))
     message("Labels length: ", length(P))
     stop("Platform labels vector length are not equal to
        samples in data")
-  }
-
-  # no platform labels if the user did not input platform and
-  # the input is not multiclassPairs_object
-  if (!is.null(platform) & class(Data)[1] != "multiclassPairs_object") {
-    P <- NULL
   }
 
   ### get platforms_ord ###
@@ -3438,23 +4012,86 @@ plot_binary_RF <- function(Data,
     platforms_ord <- unique(P)
   }
 
-  ### get prediction ###
-  # check if the prediction df is from the prediction function
-  if (!is.null(prediction) & any(class(prediction) %in% "ranger.prediction")) {
-    pred <- as.data.frame(prediction$predictions, stringsAsFactors = FALSE)
 
-    # get the prediction labels
-    pred$max_score <- colnames(pred)[max.col(pred, ties.method = "first")]
-    prediction <- pred
+  ### get prediction ###
+  pred <- NULL
+
+  # if as_training is true then extract the prediction labels from the classifier
+  if (show_predictions & as_training) {
+
+    tmp_here <- classifier$RF_scheme$RF_classifier$predictions
+
+    if (!is.null(prediction)) {
+      message("prediction object will be ignored because as_training is TRUE!")
+      message("prediction will be extracted from the classifier object for the training data!")
+    }
+
+    if (is.matrix(tmp_here)) {
+      pred <- as.data.frame(tmp_here,
+                            stringsAsFactors = FALSE)
+
+      # get the prediction labels
+      pred$max_score <- colnames(pred)[max.col(pred, ties.method = "first")]
+      prediction <- pred
+    }
+
+    if (is.factor(tmp_here)) {
+      pred <- data.frame(matrix(data = 0,
+                                nrow = length(tmp_here),
+                                ncol = length(levels(tmp_here))+1,
+                                dimnames = list(names(tmp_here),
+                                                c(levels(tmp_here),
+                                                  "max_score"))
+      ))
+      pred$max_score = as.character(tmp_here)
+      prediction <- pred
+
+      # just to make sure not plot scores when there is no scores
+      # in input prediction object
+      show_scores <- FALSE
+      message("show_scores turned FALSE because no scores are provided in the prediction object!")
+      message("You need to train your RF model with probability = TRUE to get scores when you predict classes!")
+    }
+    rm(tmp_here)
+
   } else {
-    pred <- NULL
+    # check if the prediction df is from the prediction function
+    if (!is.null(prediction) & any(class(prediction) %in% "ranger.prediction")) {
+
+      if (is.matrix(prediction$predictions)) {
+        pred <- as.data.frame(prediction$predictions, stringsAsFactors = FALSE)
+
+        # get the prediction labels
+        pred$max_score <- colnames(pred)[max.col(pred, ties.method = "first")]
+        prediction <- pred
+      }
+
+      if (is.factor(prediction$predictions)) {
+        pred <- data.frame(matrix(data = 0,
+                                  nrow = length(prediction$predictions),
+                                  ncol = length(levels(prediction$predictions))+1,
+                                  dimnames = list(names(prediction$predictions),
+                                                  c(levels(prediction$predictions),
+                                                    "max_score"))
+        ))
+        pred$max_score = as.character(prediction$predictions)
+        prediction <- pred
+
+        # just to make sure not plot scores when there is no scores
+        # in input prediction object
+        show_scores <- FALSE
+        message("show_scores turned FALSE because no scores are provided in the prediction object!")
+        message("You need to train your RF model with probability = TRUE to get scores when you predict classes!")
+      }
+    }
   }
 
   # check the length of the platform labels
-  if (!is.null(prediction)) {
+  if (!is.null(pred)) {
     if (nrow(pred) != ncol(D)) {
       message("Number of samples in the data: ", ncol(D))
-      message("Number of samples in the prediction: ", ncol(pred))
+      message("Number of samples in the prediction: ", nrow(pred))
+      message("This could be due to skipped samples during the imputation step in predict_RF function!")
       stop("Predictions should be for the same data!
      Use predict_RF to generate it for this data!")
     }
@@ -3462,12 +4099,13 @@ plot_binary_RF <- function(Data,
   ### checks ###
   if (is.null(pred) & is.null(L) & is.null(P)) {
     stop("No available ref, prediction, or platform labels!
-     One of them atleast is needed.")
+     One of them atleast is needed!")
   }
 
   ### checks for top_anno ###
   # check if the top_anno labels are available
   if (top_anno == "ref" & is.null(L)) {
+    message("top_anno can be one of these three:  'ref', 'prediction', 'platform'")
     stop("top annotation (top_anno) is ref while there is no ref labels available!")
   }
   if (top_anno == "ref" & !show_ref) {
@@ -3475,8 +4113,10 @@ plot_binary_RF <- function(Data,
   }
 
   if (top_anno == "prediction" & is.null(pred)) {
-    stop("top annotation (top_anno) is prediction while there is no prediction dataframe available! Use predict_one_vs_rest_TSP function to generate it!")
+    stop("top annotation (top_anno) is prediction while there is no prediction dataframe available!
+         Use predict_RF function to generate it or use as_training to extract predictions from the classifier object if the plot is for training data!")
   }
+
   if (top_anno == "prediction" & !show_predictions) {
     message("show_predictions was turned to TRUE because top_anno is 'prediction'!")
   }
@@ -3603,7 +4243,7 @@ plot_binary_RF <- function(Data,
 
       tmp_r <- C$RF_scheme$rules
 
-      tmp_binary <- D[tmp_r[,1],select_samples] > D[tmp_r[,2],select_samples]
+      tmp_binary <- D[tmp_r[,1],select_samples] < D[tmp_r[,2],select_samples]
       d   <- dist(t(tmp_binary[,select_samples]), method = "euclidean")
       fit <- hclust(d, method="ward.D2")
       tmp <- c(tmp, fit$labels[fit$order])
@@ -3626,7 +4266,7 @@ plot_binary_RF <- function(Data,
     for(i in groups){
       select_samples <- sam_names[lab==i]
 
-      tmp_binary <- D[tmp_r[,1],select_samples] > D[tmp_r[,2],select_samples]
+      tmp_binary <- D[tmp_r[,1],select_samples] < D[tmp_r[,2],select_samples]
       d   <- dist(t(tmp_binary[,select_samples]), method = "euclidean")
       fit <- hclust(d, method="ward.D2")
       tmp <- c(tmp, fit$labels[fit$order])
@@ -3810,7 +4450,7 @@ plot_binary_RF <- function(Data,
 
   tmp <- C$RF_scheme$rules
 
-  binary <- D[tmp[,1],] > D[tmp[,2],]
+  binary <- D[tmp[,1],] < D[tmp[,2],]
   binary <- binary + 1 # to fit with the indexes for the colors
 
   # cluster the rules
@@ -3839,7 +4479,7 @@ plot_binary_RF <- function(Data,
                  xaxt = "n", yaxt = "n", bty = "n")
 
   if (show_rule_name){
-    rule_names <- paste(tmp[,1],tmp[,2], sep = ">")
+    rule_names <- paste(tmp[,1],tmp[,2], sep = "<")
     axis(4, at =seq(0,(length(tmp_ord)-1),1)+0.5,
          labels=rule_names,las=1,cex.axis=0.5,tick=0)
   }
@@ -4293,6 +4933,7 @@ cocluster_RF <- function(object,
   }
 }
 
+##### print functions #####
 # print object function
 print.multiclassPairs_object <- function(x, ...) {
 
@@ -4466,6 +5107,25 @@ print.RandomForest_sorted_rules <- function(x, ...) {
   }
 }
 
+# print function for optimize_RF results object
+print.optimize_RF_output <- function(x, ...) {
+  # print info about the input data and labels
+  cat("optimize_RF output\n")
+  cat("    Number of trials:", nrow(x$summary),"\n")
+  cat("    Number of errors:", sum(!sapply(x$errors, is.null)),"\n")
+  cat("
+  This object contains:
+    - Summary table (access it by using this_object$summary)
+    - List of confusion matrices for each successful trial
+    - List of errors produced by failed trials\n")
+  cat("\n")
+  cat("  Generate by:\n")
+  cat("    ",gsub(capture.output(cat(capture.output(x$calls))),
+                  pattern = paste0(c(",", ",     "), collapse = "|"),
+                  replacement = ",\n            "))
+  # deparse(substitute(x))
+}
+
 # print function for the RF classifier
 print.rule_based_RandomForest <- function(x, ...) {
   # print info about the input data and labels
@@ -4496,7 +5156,7 @@ print.rule_based_RandomForest <- function(x, ...) {
                      replacement = ",\n            "))
           }
 
-          if (i == "RF_classifier"| i== "boruta") {
+          if (i == "RF_classifier"| i== "boruta" | i== "mode") {
             cat("\n")
           }
 

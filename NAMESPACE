@@ -8,6 +8,7 @@ import(utils)
 import(graphics)
 import(grDevices)
 import(methods)
+import(caret)
 
 # main object
 S3method(print, multiclassPairs_object)
@@ -19,6 +20,7 @@ S3method(print, OnevsrestScheme_TSP)
 # RF objects
 S3method(print, RandomForest_sorted_genes)
 S3method(print, RandomForest_sorted_rules)
+S3method(print, optimize_RF_output)
 S3method(print, rule_based_RandomForest)
 
 export("ReadData")
@@ -28,7 +30,9 @@ export("train_one_vs_rest_TSP")
 export("predict_one_vs_rest_TSP")
 
 export("sort_rules_RF")
+export("summary_genes_RF")
 export("sort_genes_RF")
+export("optimize_RF")
 export("train_RF")
 export("predict_RF")
 
