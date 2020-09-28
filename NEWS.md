@@ -1,3 +1,9 @@
+# multiclassPairs v0.2.1 (Release date: 2020-09-28)
+
+## Dependencies:
+
+* Dependency issue solved
+
 # multiclassPairs v0.2.0 (Release date: 2020-09-24)
 
 ## Additions:

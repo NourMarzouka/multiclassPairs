@@ -23,14 +23,25 @@ ReadData <- function(Data,
   # if the input Data is ExpressionSet object
   if (class(Data)[1] == "ExpressionSet") {
 
+    # Biobase package is needed
+    if(!requireNamespace("Biobase", quietly = TRUE)){
+      message("ExpressionSet is used and 'Biobase' package from Bioconductor is needed!")
+      stop("Visit their website or install Biobase package using:
+      if (!requireNamespace('BiocManager', quietly = TRUE)) {
+      install.packages('BiocManager')
+      }
+      BiocManager::install('Biobase')", call. = FALSE)
+    } else {
+      requireNamespace("Biobase")
+    }
+
     # extract the expression matrix from the ExpressionSet
-    # Data_tmp <- as.matrix(exprs(Data))
-    Data_tmp <- as.data.frame(exprs(Data), stringsAsFactors = FALSE)
+    Data_tmp <- as.data.frame(Biobase::exprs(Data), stringsAsFactors = FALSE)
 
     # if labels are not provided then give the available variables in Eset
     if (!hasArg(Labels)) {
       message(capture.output(cat("Phenotype data has these variables:",
-                                 varLabels(Data),
+                                 Biobase::varLabels(Data),
                                  fill = TRUE)))
       stop("input a vector with same length of samples number
            or select one of these variable for Labels")
@@ -39,12 +50,12 @@ ReadData <- function(Data,
     # extract the Labels - in case it is stored in the ExpressionSet
     if (is.character(Labels) & length(Labels) == 1) {
 
-      if (Labels %in% varLabels(Data)) {
-        Labels_tmp <- as.character(pData(Data)[, Labels])
+      if (Labels %in% Biobase::varLabels(Data)) {
+        Labels_tmp <- as.character(Biobase::pData(Data)[, Labels])
 
       } else {
         message(capture.output(cat("Phenotype data has these variables:",
-                                   varLabels(Data),
+                                   Biobase::varLabels(Data),
                                    fill = TRUE)))
         stop("Labels variable is not found in the phenotype data of your ExpressionSet")
       }
@@ -66,13 +77,13 @@ ReadData <- function(Data,
       # extract the Labels - in case it is stored in the ExpressionSet
       if (is.character(Platform) & length(Platform) == 1) {
 
-        if (Platform %in% varLabels(Data)) {
-          Platform_tmp <- as.character(pData(Data)[, Platform])
+        if (Platform %in% Biobase::varLabels(Data)) {
+          Platform_tmp <- as.character(Biobase::pData(Data)[, Platform])
 
         } else {
           message(capture.output(
             cat("Phenotype data has these variables:",
-                varLabels(Data), fill = TRUE)))
+                Biobase::varLabels(Data), fill = TRUE)))
           stop("Platform variable is not found in the phenotype
                data of your ExpressionSet")
         }
@@ -235,6 +246,18 @@ filter_genes_TSP <- function(data_object,
                              UpDown = TRUE,
                              verbose = TRUE) {
 
+  # switchBox package is needed
+  if(!requireNamespace("switchBox", quietly = TRUE)){
+    message("'switchBox' package from Bioconductor is needed!")
+    stop("Visit their website or install switchBox package using:
+      if (!requireNamespace('BiocManager', quietly = TRUE)) {
+      install.packages('BiocManager')
+      }
+      BiocManager::install('switchBox')", call. = FALSE)
+  } else {
+    requireNamespace("switchBox")
+  }
+
   # check the data_object class
   if (class(data_object)[1] != "multiclassPairs_object") {
     stop("This function requires multiclassPairs_object!
@@ -347,7 +370,7 @@ filter_genes_TSP <- function(data_object,
         message(paste("Class: ",i))
       }
       # wilcoxon test from SwitchBox package
-      filtered_genes[[i]] <- SWAP.Filter.Wilcoxon(
+      filtered_genes[[i]] <- switchBox::SWAP.Filter.Wilcoxon(
         inputMat = as.matrix(D),
         phenoGroup = group_TSP(label = L,
                                my_group = i),
@@ -406,7 +429,7 @@ filter_genes_TSP <- function(data_object,
         # wilcoxon test from SwitchBox package
         # this will return the same number of genes in D
         # this will sort the genes based on this platform
-        plat_genes[[y]][[i]] <- SWAP.Filter.Wilcoxon(
+        plat_genes[[y]][[i]] <- switchBox::SWAP.Filter.Wilcoxon(
           inputMat = as.matrix(D[,plat_samples]),
           phenoGroup = group_TSP(label = L[plat_samples],
                                  my_group = i),
@@ -914,6 +937,18 @@ train_one_vs_rest_TSP <- function(data_object,
                                   SB_arg = list(),
                                   verbose = TRUE) {
 
+  # switchBox package is needed
+  if(!requireNamespace("switchBox", quietly = TRUE)){
+    message("'switchBox' package from Bioconductor is needed!")
+    stop("Visit their website or install switchBox package using:
+      if (!requireNamespace('BiocManager', quietly = TRUE)) {
+      install.packages('BiocManager')
+      }
+      BiocManager::install('switchBox')", call. = FALSE)
+  } else {
+    requireNamespace("switchBox")
+  }
+
   # check the data_object class
   if (class(data_object)[1] != "multiclassPairs_object") {
     stop("This function requires multiclassPairs_object!
@@ -1059,7 +1094,7 @@ train_one_vs_rest_TSP <- function(data_object,
       message("Score calculations...")
     }
     if (one_vs_one_scores == FALSE & platform_wise_scores == FALSE) {
-      final_scores <- SWAP.Calculate.SignedTSPScores(
+      final_scores <- switchBox::SWAP.Calculate.SignedTSPScores(
         classes = c(cl, "rest"),
         inputMat1  = as.matrix(D),
         phenoGroup = group_TSP(L, cl),
@@ -1089,7 +1124,7 @@ train_one_vs_rest_TSP <- function(data_object,
         tmp_D <- D[,plat_vector == ss]
         tmp_L <- L[plat_vector == ss]
 
-        tmp  <- SWAP.Calculate.SignedTSPScores(
+        tmp  <- switchBox::SWAP.Calculate.SignedTSPScores(
           classes = c(cl, "rest"),
           inputMat1  = as.matrix(tmp_D),
           phenoGroup = group_TSP(tmp_L, cl),
@@ -1132,7 +1167,7 @@ train_one_vs_rest_TSP <- function(data_object,
         tmp_D <- D[,L%in%c(cl,cl2)]
         tmp_L <- L[L%in%c(cl,cl2)]
 
-        tmp  <- SWAP.Calculate.SignedTSPScores(
+        tmp  <- switchBox::SWAP.Calculate.SignedTSPScores(
           classes = c(cl, "rest"),
           inputMat1  = as.matrix(tmp_D),
           phenoGroup = group_TSP(tmp_L, cl),
@@ -1180,7 +1215,7 @@ train_one_vs_rest_TSP <- function(data_object,
           tmp_D <- D[,wanted_sam]
           tmp_L <- L[wanted_sam]
 
-          tmp  <- SWAP.Calculate.SignedTSPScores(
+          tmp  <- switchBox::SWAP.Calculate.SignedTSPScores(
             classes = c(cl, "rest"),
             inputMat1  = as.matrix(tmp_D),
             phenoGroup = group_TSP(tmp_L, cl),
@@ -1214,7 +1249,7 @@ train_one_vs_rest_TSP <- function(data_object,
     }
     set.seed(seed)
 
-    object_tmp[["classifiers"]][[cl]] <- SWAP.Train.KTSP(
+    object_tmp[["classifiers"]][[cl]] <- switchBox::SWAP.Train.KTSP(
       inputMat   = as.matrix(D),
       krange     = k_range,
       phenoGroup = group_TSP(L,cl),
@@ -1235,6 +1270,18 @@ predict_one_vs_rest_TSP <- function(classifier,
                                     weighted_votes = TRUE,
                                     classes,
                                     verbose = TRUE) {
+
+  # switchBox package is needed
+  if(!requireNamespace("switchBox", quietly = TRUE)){
+    message("'switchBox' package from Bioconductor is needed!")
+    stop("Visit their website or install switchBox package using:
+      if (!requireNamespace('BiocManager', quietly = TRUE)) {
+      install.packages('BiocManager')
+      }
+      BiocManager::install('switchBox')", call. = FALSE)
+  } else {
+    requireNamespace("switchBox")
+  }
 
   # check the object class
   if (!class(Data)[1] %in% c("multiclassPairs_object",
@@ -1267,9 +1314,21 @@ predict_one_vs_rest_TSP <- function(classifier,
 
   # if the input Data is ExpressionSet object
   if (class(Data)[1] == "ExpressionSet") {
+
+    # Biobase package is needed
+    if(!requireNamespace("Biobase", quietly = TRUE)){
+      message("ExpressionSet is used and 'Biobase' package from Bioconductor is needed!")
+      stop("Visit their website or install Biobase package using:
+      if (!requireNamespace('BiocManager', quietly = TRUE)) {
+      install.packages('BiocManager')
+      }
+      BiocManager::install('Biobase')", call. = FALSE)
+    } else {
+      requireNamespace("Biobase")
+    }
+
     # extract the expression matrix from the ExpressionSet
-    #D <- as.matrix(exprs(Data))
-    D <- as.data.frame(exprs(Data), stringsAsFactors = FALSE)
+    D <- as.data.frame(Biobase::exprs(Data), stringsAsFactors = FALSE)
   }
 
   if (class(Data)[1]  ==  "multiclassPairs_object") {
@@ -1340,7 +1399,7 @@ predict_one_vs_rest_TSP <- function(classifier,
     }
 
     # get scores for the predictions
-    kappa <- SWAP.KTSP.Statistics(inputMat = as.matrix(D),
+    kappa <- switchBox::SWAP.KTSP.Statistics(inputMat = as.matrix(D),
                                   classifier = c)
 
     if (weighted_votes) {
@@ -1435,9 +1494,21 @@ plot_binary_TSP <- function(Data,
 
   # if the input Data is ExpressionSet object
   if (class(Data)[1] == "ExpressionSet") {
+
+    # Biobase package is needed
+    if(!requireNamespace("Biobase", quietly = TRUE)){
+      message("ExpressionSet is used and 'Biobase' package from Bioconductor is needed!")
+      stop("Visit their website or install Biobase package using:
+      if (!requireNamespace('BiocManager', quietly = TRUE)) {
+      install.packages('BiocManager')
+      }
+      BiocManager::install('Biobase')", call. = FALSE)
+    } else {
+      requireNamespace("Biobase")
+    }
+
     # extract the expression matrix from the ExpressionSet
-    # D <- as.matrix(exprs(Data))
-    D <- as.data.frame(exprs(Data), stringsAsFactors = FALSE)
+    D <- as.data.frame(Biobase::exprs(Data), stringsAsFactors = FALSE)
   }
 
   if (class(Data)[1] == "multiclassPairs_object") {
@@ -1491,11 +1562,11 @@ plot_binary_TSP <- function(Data,
     # extract the Labels - in case it is stored in the
     # ExpressionSet
     if (is.character(ref) & length(ref) == 1) {
-      if (ref %in% varLabels(Data)) {
-        L <- as.character(pData(Data)[, ref])
+      if (ref %in% Biobase::varLabels(Data)) {
+        L <- as.character(Biobase::pData(Data)[, ref])
       } else {
         message(capture.output(cat("Phenotype data has these variables:",
-                                   varLabels(Data), fill = TRUE)))
+                                   Biobase::varLabels(Data), fill = TRUE)))
         stop("Ref label variable is not found in the phenotype data of your ExpressionSet")
       }
     }
@@ -1543,11 +1614,11 @@ plot_binary_TSP <- function(Data,
     # extract the platform label - in case it is stored in the
     # ExpressionSet
     if (is.character(platform) & length(platform) == 1) {
-      if (platform %in% varLabels(Data)) {
-        P <- as.character(pData(Data)[, platform])
+      if (platform %in% Biobase::varLabels(Data)) {
+        P <- as.character(Biobase::pData(Data)[, platform])
       } else {
         message(capture.output(cat("Phenotype data has these variables:",
-                                   varLabels(Data), fill = TRUE)))
+                                   Biobase::varLabels(Data), fill = TRUE)))
         stop("Platform/study label variable is not found in the phenotype data of your ExpressionSet")
       }
     }
@@ -3626,8 +3697,21 @@ predict_RF <- function(classifier,
 
   # if the input Data is ExpressionSet object
   if (class(Data)[1] == "ExpressionSet") {
+
+    # Biobase package is needed
+    if(!requireNamespace("Biobase", quietly = TRUE)){
+      message("ExpressionSet is used and 'Biobase' package from Bioconductor is needed!")
+      stop("Visit their website or install Biobase package using:
+      if (!requireNamespace('BiocManager', quietly = TRUE)) {
+      install.packages('BiocManager')
+      }
+      BiocManager::install('Biobase')", call. = FALSE)
+    } else {
+      requireNamespace("Biobase")
+    }
+
     # extract the expression matrix from the ExpressionSet
-    D <- as.data.frame(exprs(Data), stringsAsFactors = FALSE)
+    D <- as.data.frame(Biobase::exprs(Data), stringsAsFactors = FALSE)
   }
 
   if (class(Data)[1]  ==  "multiclassPairs_object") {
@@ -3856,9 +3940,21 @@ plot_binary_RF <- function(Data,
 
   # if the input Data is ExpressionSet object
   if (class(Data)[1] == "ExpressionSet") {
+
+    # Biobase package is needed
+    if(!requireNamespace("Biobase", quietly = TRUE)){
+      message("ExpressionSet is used and 'Biobase' package from Bioconductor is needed!")
+      stop("Visit their website or install Biobase package using:
+      if (!requireNamespace('BiocManager', quietly = TRUE)) {
+      install.packages('BiocManager')
+      }
+      BiocManager::install('Biobase')", call. = FALSE)
+    } else {
+      requireNamespace("Biobase")
+    }
+
     # extract the expression matrix from the ExpressionSet
-    # D <- as.matrix(exprs(Data))
-    D <- as.data.frame(exprs(Data), stringsAsFactors = FALSE)
+    D <- as.data.frame(Biobase::exprs(Data), stringsAsFactors = FALSE)
   }
 
   if (class(Data)[1] == "multiclassPairs_object") {
@@ -3917,11 +4013,11 @@ plot_binary_RF <- function(Data,
     # extract the Labels - in case it is stored in the
     # ExpressionSet
     if (is.character(ref) & length(ref) == 1) {
-      if (ref %in% varLabels(Data)) {
-        L <- as.character(pData(Data)[, ref])
+      if (ref %in% Biobase::varLabels(Data)) {
+        L <- as.character(Biobase::pData(Data)[, ref])
       } else {
         message(capture.output(cat("Phenotype data has these variables:",
-                                   varLabels(Data), fill = TRUE)))
+                                   Biobase::varLabels(Data), fill = TRUE)))
         stop("Ref label variable is not found in the phenotype data of your ExpressionSet")
       }
     }
@@ -3968,11 +4064,11 @@ plot_binary_RF <- function(Data,
     # extract the platform label - in case it is stored in the
     # ExpressionSet
     if (is.character(platform) & length(platform) == 1) {
-      if (platform %in% varLabels(Data)) {
-        P <- as.character(pData(Data)[, platform])
+      if (platform %in% Biobase::varLabels(Data)) {
+        P <- as.character(Biobase::pData(Data)[, platform])
       } else {
         message(capture.output(cat("Phenotype data has these variables:",
-                                   varLabels(Data), fill = TRUE)))
+                                   Biobase::varLabels(Data), fill = TRUE)))
         stop("Platform/study label variable is not found in the phenotype data of your ExpressionSet")
       }
     }

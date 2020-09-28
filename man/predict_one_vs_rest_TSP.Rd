@@ -58,10 +58,8 @@ L <- sample(x = c("A","B","C"), size = 100, replace = TRUE)
 # study/platform
 P <- sample(c("P1","P2"), size = 100, replace = TRUE)
 
-table(P,L)
-
 object <- ReadData(Data = Data,
-                   Labels = L,
+             Labels = L,
                    Platform = P)
 
 filtered_genes <- filter_genes_TSP(data_object = object,
@@ -70,30 +68,31 @@ filtered_genes <- filter_genes_TSP(data_object = object,
                                   featureNo = 10,
                                   UpDown = TRUE,
                                   verbose = FALSE)
-filtered_genes
 
 # training
-classifier <- train_one_vs_rest_TSP(data_object = object,
-                             filtered_genes = filtered_genes,
-                             k_range = 2:50,
-                             include_pivot = FALSE,
-                             one_vs_one_scores = FALSE,
-                             platform_wise_scores = FALSE,
-                             seed = 1234,
-                             verbose = FALSE)
-classifier
+# classifier <- train_one_vs_rest_TSP(data_object = object,
+#                              filtered_genes = filtered_genes,
+#                              k_range = 2:50,
+#                              include_pivot = FALSE,
+#                              one_vs_one_scores = FALSE,
+#                              platform_wise_scores = FALSE,
+#                              seed = 1234,
+#                              verbose = FALSE)
 
-results <- predict_one_vs_rest_TSP(classifier = classifier,
-                                  Data = object,
-                                  tolerate_missed_genes = TRUE,
-                                  weighted_votes = TRUE,
-                                  verbose = FALSE)
-results
-
-
+# results <- predict_one_vs_rest_TSP(classifier = classifier,
+#                                   Data = object,
+#                                   tolerate_missed_genes = TRUE,
+#                                   weighted_votes = TRUE,
+#                                   verbose = FALSE)
 
 # Confusion Matrix and Statistics on training data
- caret::confusionMatrix(data = factor(results$max_score, levels = unique(L)),
-                        reference = factor(L, levels = unique(L)),
-                        mode="everything")
+#  caret::confusionMatrix(data = factor(results$max_score, levels = unique(L)),
+#                         reference = factor(L, levels = unique(L)),
+#                         mode="everything")
+
+# not to run
+# plot_binary_TSP(Data = object, classes=c("A","B","C"),
+#                 classifier = classifier,
+#                 prediction = results,
+#                 title = "Test")
 }

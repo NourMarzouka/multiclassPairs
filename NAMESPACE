@@ -1,5 +1,5 @@
-import(Biobase)
-import(switchBox)
+# import(Biobase)
+# import(switchBox)
 import(dunn.test)
 import(ranger)
 import(Boruta)
@@ -9,6 +9,7 @@ import(graphics)
 import(grDevices)
 import(methods)
 import(caret)
+import(e1071)
 
 # main object
 S3method(print, multiclassPairs_object)
