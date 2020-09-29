@@ -132,6 +132,15 @@ object <- ReadData(Data = Data,
              Labels = L,
                    Platform = P)
 
+# switchBox package from Bioconductor is needed
+# Visit their website or install switchBox package using:
+# if(!requireNamespace("switchBox", quietly = TRUE)){
+#       if (!requireNamespace('BiocManager', quietly = TRUE)) {
+#       install.packages('BiocManager')
+#      }
+#      BiocManager::install('switchBox')", call. = FALSE)
+#  }
+
 filtered_genes <- filter_genes_TSP(data_object = object,
                                   filter = "one_vs_rest",
                                   platform_wise = FALSE,
