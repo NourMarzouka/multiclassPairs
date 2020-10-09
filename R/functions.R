@@ -932,6 +932,7 @@ train_one_vs_rest_TSP <- function(data_object,
                                   include_pivot=FALSE,
                                   one_vs_one_scores=FALSE,
                                   platform_wise_scores=FALSE,
+                                  disjoint = TRUE,
                                   seed=NULL,
                                   classes,
                                   SB_arg = list(),
@@ -1249,15 +1250,19 @@ train_one_vs_rest_TSP <- function(data_object,
     }
     set.seed(seed)
 
-    object_tmp[["classifiers"]][[cl]] <- switchBox::SWAP.Train.KTSP(
-      inputMat   = as.matrix(D),
-      krange     = k_range,
-      phenoGroup = group_TSP(L,cl),
-      FilterFunc = tmp_filter_fun,
-      score_fn   = tmp_score_fun,
-      classes    = c(cl, "rest"),
-      verbose    = verbose,
-      unlist(SB_arg))
+
+    # get the arguments for the final model training in SB package
+    args_tmp <- list(inputMat   = as.matrix(D),
+                     krange     = k_range,
+                     phenoGroup = group_TSP(L, cl),
+                     FilterFunc = tmp_filter_fun,
+                     score_fn   = tmp_score_fun,
+                     classes    = c(cl, "rest"),
+                     disjoint   = disjoint,
+                     verbose    = verbose)
+
+    args_tmp  <- c(args_tmp, SB_arg)
+    object_tmp[["classifiers"]][[cl]] <- do.call(switchBox::SWAP.Train.KTSP, args_tmp)
   }
 
   return(object_tmp)
@@ -1535,7 +1540,7 @@ plot_binary_TSP <- function(Data,
   }
 
   if (any(!names(classifier[["classifiers"]]) %in% classes)) {
-    message("Because the classes argument miss these classes then these classes will be removed from the heatmap:")
+    message("Classes argument misses the following classes, they will be removed from the heatmap:")
     message(paste0(names(classifier[["classifiers"]])[!names(classifier[["classifiers"]])
                                                       %in% classes], collapse = " "))
 
@@ -1572,23 +1577,24 @@ plot_binary_TSP <- function(Data,
     }
 
     # get the input Labels vector as it is
-    if ((is.character(ref) | is.factor(ref)) & length(ref) !=
-        1) {
+    if ((is.character(ref) | is.factor(ref)) & length(ref) != 1) {
       L <- as.character(ref)
     }
   }
 
   # check the length of the ref labels
-  if (length(L) != ncol(D) & !is.null(ref)) {
+  if (!is.null(ref)) {
+      if (length(L) != ncol(D)) {
     message("Number of samples: ", ncol(D))
     message("Labels length: ", length(L))
     stop("Labels vector length are not equal to
        samples in data")
   }
+  }
 
   # no ref labels if the user did not input ref and the input
   # is not multiclassPairs_object
-  if (!is.null(ref) & class(Data)[1] != "multiclassPairs_object") {
+  if (is.null(ref) & class(Data)[1] != "multiclassPairs_object") {
     L <- NULL
   }
 
@@ -1631,16 +1637,18 @@ plot_binary_TSP <- function(Data,
   }
 
   # check the length of the platform labels
-  if (length(P) != ncol(D) & !is.null(platform)) {
+  if (!is.null(platform)) {
+    if (length(P) != ncol(D)) {
     message("Number of samples: ", ncol(D))
     message("Labels length: ", length(P))
     stop("Platform labels vector length are not equal to
        samples in data")
   }
+  }
 
   # no platform labels if the user did not input platform and
   # the input is not multiclassPairs_object
-  if (!is.null(platform) & class(Data)[1] != "multiclassPairs_object") {
+  if (is.null(platform) & class(Data)[1] != "multiclassPairs_object") {
     P <- NULL
   }
 
@@ -3988,7 +3996,7 @@ plot_binary_RF <- function(Data,
   }
 
   if (any(!tmp_n %in% classes)) {
-    message("Because the classes argument miss these classes then these classes will be removed from the heatmap:")
+    message("Classes argument misses the following classes, they will be removed from the heatmap:")
     message(paste0(tmp_n[!tmp_n %in% classes], collapse = " "))
   }
 

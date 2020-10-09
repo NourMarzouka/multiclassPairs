@@ -106,6 +106,12 @@ object <- ReadData(Data = Data,
 genes_RF <- sort_genes_RF(data_object = object,
                           seed=123456, verbose = FALSE)
 
+# to get an idea of how many genes we will use
+# and how many rules will be generated
+# summary_genes_RF(sorted_genes_RF = genes_RF,
+#                  genes_altogether = c(10,20,50,100,150,200),
+#                  genes_one_vs_rest = c(10,20,50,100,150,200))
+
 # creat and sort rules
 # rules_RF <- sort_rules_RF(data_object = object,
 #                           sorted_genes_RF = genes_RF,

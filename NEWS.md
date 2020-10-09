@@ -1,3 +1,12 @@
+# multiclassPairs v0.2.2 (Release date: 2020-10-09)
+
+### Bug fixes:
+
+* easier access to switchBox disjoint argument in train_one_vs_rest_TSP function
+* Bug fix in plot_binary_TSP related to using ExpressionSet as input
+* Bug fix related to passing additional arguments to SB training function by the user
+* Update examples
+
 # multiclassPairs v0.2.1 (Release date: 2020-09-28)
 
 ### Dependencies:

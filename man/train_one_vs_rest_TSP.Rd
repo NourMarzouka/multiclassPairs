@@ -12,6 +12,7 @@ train_one_vs_rest_TSP(data_object,
                       include_pivot = FALSE,
                       one_vs_one_scores = FALSE,
                       platform_wise_scores = FALSE,
+                      disjoint = TRUE,
                       seed = NULL,
                       classes,
                       SB_arg = list(),
@@ -35,6 +36,8 @@ logical indicating if rules scores for each class should be calculated as a mean
   \item{platform_wise_scores}{
 logical indicating if rules scores for each class should be calculated in each platform-wise then averaged instead of merging all platforms together. Default is FALSE.
 }
+  \item{disjoint}{
+is a logical value indicating whether only disjoint pairs should be considered in the final set of selected pairs; i.e. all features occur only once among the set of TSPs. This is an argument to be passed to the training function \code{SWAP.Train.KTSP} from \pkg{switchBox} package.}
   \item{seed}{
 an integer to set a seed for the training process (for reproducibility).
 }
