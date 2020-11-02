@@ -1,21 +1,28 @@
-# multiclassPairs v0.2.2 (Release date: 2020-10-09)
+# multiclassPairs v0.2.2 (Release date: 2020-11-02)
+
+### Additions:
+* Tutorial is available now.
+
+### Minor changes:
+* easier access to switchBox disjoint argument in train_one_vs_rest_TSP function.
+* Update examples.
 
 ### Bug fixes:
-
-* easier access to switchBox disjoint argument in train_one_vs_rest_TSP function
-* Bug fix in plot_binary_TSP related to using ExpressionSet as input
-* Bug fix related to passing additional arguments to SB training function by the user
-* Update examples
+* plot_binary_TSP when using ExpressionSet as input with no ref or platform.
+* passing additional arguments to SB training function by the user.
+* printing number of rules in the print function for sorted rules.
+* border = NA instead of border = FALSE in plotting functions.
+* optimize_RF can handle two classes problems without errors
+* num.trees = num.trees missed in ranger for featureNo_altogether slots
 
 # multiclassPairs v0.2.1 (Release date: 2020-09-28)
 
 ### Dependencies:
 
-* Dependency issue solved (switchBox and Biobase packages are installed separately)
+* Dependency issue solved (switchBox and Biobase packages are installed separately).
 
 ### Minor changes:
 * Update examples.
-
 
 
 # multiclassPairs v0.2.0 (Release date: 2020-09-24)
@@ -34,7 +41,7 @@
 
 ### Optimizations:
 
-* stats for gene repetition in rules are stored in the sorted rules object to make training process faster
+* stats for gene repetition in rules are stored in the sorted rules object to make training process faster.
 
 ### Minor changes:
 * Update examples.

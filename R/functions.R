@@ -1405,7 +1405,7 @@ predict_one_vs_rest_TSP <- function(classifier,
 
     # get scores for the predictions
     kappa <- switchBox::SWAP.KTSP.Statistics(inputMat = as.matrix(D),
-                                  classifier = c)
+                                             classifier = c)
 
     if (weighted_votes) {
       scores_df[,cl]<-rowSums(t(t(kappa$comparisons)*c$score))/sum(c$score)
@@ -1582,22 +1582,21 @@ plot_binary_TSP <- function(Data,
     }
   }
 
-  # check the length of the ref labels
-  if (!is.null(ref)) {
-      if (length(L) != ncol(D)) {
-    message("Number of samples: ", ncol(D))
-    message("Labels length: ", length(L))
-    stop("Labels vector length are not equal to
-       samples in data")
-  }
-  }
-
   # no ref labels if the user did not input ref and the input
   # is not multiclassPairs_object
   if (is.null(ref) & class(Data)[1] != "multiclassPairs_object") {
     L <- NULL
   }
 
+  # check the length of the ref labels
+  if (!is.null(ref)) {
+    if (length(L) != ncol(D)) {
+      message("Number of samples: ", ncol(D))
+      message("Labels length: ", length(L))
+      stop("Labels vector length are not equal to
+       samples in data")
+    }
+  }
 
   ### get Platform labels ###
   # if the data is object
@@ -1636,20 +1635,20 @@ plot_binary_TSP <- function(Data,
     }
   }
 
-  # check the length of the platform labels
-  if (!is.null(platform)) {
-    if (length(P) != ncol(D)) {
-    message("Number of samples: ", ncol(D))
-    message("Labels length: ", length(P))
-    stop("Platform labels vector length are not equal to
-       samples in data")
-  }
-  }
-
   # no platform labels if the user did not input platform and
   # the input is not multiclassPairs_object
   if (is.null(platform) & class(Data)[1] != "multiclassPairs_object") {
     P <- NULL
+  }
+
+  # check the length of the platform labels
+  if (!is.null(platform)) {
+    if (length(P) != ncol(D)) {
+      message("Number of samples: ", ncol(D))
+      message("Labels length: ", length(P))
+      stop("Platform labels vector length are not equal to
+       samples in data")
+    }
   }
 
   ### get platforms_ord ###
@@ -2074,7 +2073,7 @@ plot_binary_TSP <- function(Data,
 
     for(f in 1:ncol(binary)){
       for(g in 1:nrow(binary)){
-        rect(f-1,g,f,g-1,col=binary_col[binary[g,f]],border=F,lwd=0)
+        rect(f-1,g,f,g-1,col=binary_col[binary[g,f]],border=NA,lwd=0)
       }
     }
 
@@ -2369,6 +2368,7 @@ sort_genes_RF <- function (data_object,
 
         rf_all <- ranger(x=t(D[, plat_samples]),
                          y=factor(L[plat_samples]),
+                         num.trees = num.trees,
                          importance = importance,
                          write.forest = write.forest,
                          keep.inbag = keep.inbag,
@@ -2917,6 +2917,7 @@ sort_rules_RF <- function (data_object,
 
         rf_all <- ranger(x=t(binary[, plat_samples]),
                          y=factor(L[plat_samples]),
+                         num.trees = num.trees,
                          importance = importance,
                          write.forest = write.forest,
                          keep.inbag = keep.inbag,
@@ -3251,22 +3252,67 @@ optimize_RF <- function(data_object,
       pred <- colnames(pred)[max.col(pred)]
     }
 
-    # produce the confusion matrix by Caret package
-    con <- confusionMatrix(data =factor(pred,
-                                        levels = groups),
-                           reference = factor(ref_lab,
-                                              levels = groups),
-                           mode = "everything")
+    if(length(groups)>2){
+      # produce the confusion matrix by Caret package
+      con <- confusionMatrix(data =factor(pred,
+                                          levels = groups),
+                             reference = factor(ref_lab,
+                                                levels = groups),
+                             mode = "everything")
 
-    res_list$confusionMatrix[[i]] <- con
+      res_list$confusionMatrix[[i]] <- con
 
-    for (o in overall) {
-      out_df[i,o] <- con$overall[[o]]
+      for (o in overall) {
+        out_df[i,o] <- con$overall[[o]]
+      }
+
+      for (b in byclass) {
+        for (cl in groups) {
+          out_df[i,paste(cl,b, sep = ".")] <- con$byClass[paste("Class:",cl),b]
+        }
+      }
     }
 
-    for (b in byclass) {
-      for (cl in groups) {
-        out_df[i,paste(cl,b, sep = ".")] <- con$byClass[paste("Class:",cl),b]
+    # for data with two classes only
+    # we need to run confusionMatrix twice
+    # and we need to change the positive group each time
+    if(length(groups)==2){
+
+      tmp_li <- list(A=NULL, B=NULL)
+      names(tmp_li) <- groups
+      res_list$confusionMatrix[[i]] <- tmp_li
+
+      # produce the confusion matrix by Caret package
+      con <- confusionMatrix(data =factor(pred,
+                                          levels = groups),
+                             reference = factor(ref_lab,
+                                                levels = groups),
+                             mode = "everything")
+
+      res_list$confusionMatrix[[i]][[groups[1]]] <- con
+
+      # overall can be done once only
+      for (o in overall) {
+        out_df[i,o] <- con$overall[[o]]
+      }
+
+      cl = groups[1]
+      for (b in byclass) {
+        out_df[i,paste(cl,b, sep = ".")] <- con$byClass[b]
+      }
+
+      # now we redo the confusion matrix using the other group as positive
+      con <- confusionMatrix(data =factor(pred,
+                                          levels = rev(groups)),
+                             reference = factor(ref_lab,
+                                                levels = rev(groups)),
+                             mode = "everything")
+
+      res_list$confusionMatrix[[i]][[groups[2]]] <- con
+
+      cl = groups[2]
+      for (b in byclass) {
+        out_df[i,paste(cl,b, sep = ".")] <- con$byClass[b]
       }
     }
 
@@ -4590,7 +4636,7 @@ plot_binary_RF <- function(Data,
 
   for(f in 1:ncol(binary)){
     for(g in 1:nrow(binary)){
-      rect(f-1,g,f,g-1,col=binary_col[binary[g,f]],border=F,lwd=0)
+      rect(f-1,g,f,g-1,col=binary_col[binary[g,f]],border= NA,lwd=0)
     }
   }
 
@@ -4647,6 +4693,7 @@ plot_binary_RF <- function(Data,
 }
 
 # coclustering plot for RF training data
+# plot_proximity_matrix_RF
 cocluster_RF <- function(object,
                          classifier,
                          title = "",
@@ -5008,7 +5055,7 @@ cocluster_RF <- function(object,
 
   for(f in 1:ncol(prox)){
     for(g in 1:nrow(prox)){
-      rect(f-1,g,f,g-1,col=HM_colors[prox[g,f]],border=FALSE,lwd=0)
+      rect(f-1,g,f,g-1,col=HM_colors[prox[g,f]],border=NA,lwd=0)
     }
   }
 
@@ -5191,7 +5238,7 @@ print.RandomForest_sorted_rules <- function(x, ...) {
           if (i == "sorted_rules") {
             for (z in names(x[[y]][[i]])) {
               cat("        ","- class:",z,":",
-                  length(x[[y]][[i]][[z]])," sorted rules\n")
+                  nrow(x[[y]][[i]][[z]])," sorted rules\n")
             }
           }
 
