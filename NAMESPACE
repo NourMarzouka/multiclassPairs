@@ -39,4 +39,4 @@ export("predict_RF")
 
 export("plot_binary_TSP")
 export("plot_binary_RF")
-export("cocluster_RF")
+export("proximity_matrix_RF")

@@ -4692,22 +4692,23 @@ plot_binary_RF <- function(Data,
   }
 }
 
-# coclustering plot for RF training data
-# plot_proximity_matrix_RF
-cocluster_RF <- function(object,
-                         classifier,
-                         title = "",
-                         top_anno = c("ref","platform")[1],
-                         classes = NULL,
-                         sam_order = NULL,
-                         ref_col = NULL,
-                         platform_col = NULL,
-                         platforms_ord = NULL,
-                         show_platform = TRUE,
-                         cluster_cols = FALSE,
-                         legend = TRUE,
-                         anno_height = 0.03,
-                         margin = c(0, 5, 0, 5)){
+# proximity_matrix_RF and plot for RF training data
+proximity_matrix_RF <- function(object,
+                                classifier,
+                                plot=TRUE,
+                                return_matrix=TRUE,
+                                title = "",
+                                top_anno = c("ref","platform")[1],
+                                classes = NULL,
+                                sam_order = NULL,
+                                ref_col = NULL,
+                                platform_col = NULL,
+                                platforms_ord = NULL,
+                                show_platform = TRUE,
+                                cluster_cols = FALSE,
+                                legend = TRUE,
+                                anno_height = 0.03,
+                                margin = c(0, 5, 0, 5)){
   ### get classifier ###
   # check classifier object
   if (class(classifier)[1] != "rule_based_RandomForest") {
@@ -4745,6 +4746,15 @@ cocluster_RF <- function(object,
   #
   if (is.null(C$inbag.counts)) {
     stop("call ranger with keep.inbag = TRUE")
+  }
+
+  #
+  if (!is.logical(plot) | !is.logical(return_matrix)){
+    stop("plot and return_matrix arguments should be logical!")
+  }
+
+  if (!plot & !return_matrix) {
+    stop("At least one of plot and return_matrix arguments should be TRUE!")
   }
 
   ### title ###
@@ -4920,6 +4930,10 @@ cocluster_RF <- function(object,
   lab       <- lab[sam_ord]
   prox      <- prox[rev(sam_ord),sam_ord]
 
+  if (return_matrix){
+    prox_return <- prox
+  }
+
   sam_names <- sam_names[sam_ord]
 
   num_sam   <- ncol(D)
@@ -4930,92 +4944,51 @@ cocluster_RF <- function(object,
   splits <- table(lab)[order(match(names(table(lab)), groups))]
 
   ### to keep the par settings from the user
-  oldpar <- par(no.readonly = TRUE)
-  on.exit(par(oldpar))
+  # here
+  if (plot) {
+    oldpar <- par(no.readonly = TRUE)
+    on.exit(par(oldpar))
 
-  ### plot top_anno ###
-  {
-    # Subtype annotation
-    AreaStart <- 0.94
-    SizeUnit  <- anno_height
-    Size <- SizeUnit * 1
-    AreaEnd <- AreaStart - Size
-    par(fig = c(0, 1, AreaEnd, AreaStart), mar = margin,
-        mgp = c(3, 0.5, 0), new = FALSE)
-    plot(c(0, 1), c(0, 1), type = "n", xaxs = "i", yaxs = "i",
-         xlab = "", ylab = "", main = "", xlim = c(0, num_sam),
-         ylim = c(0, 1), xaxt = "n", yaxt = "n", bty = "n")
-
-    if (is.null(sam_order)){
-      # headlines
-      text_positions <- cumsum(splits)[1]/2
-      for (i in 1:(length(cumsum(splits)) - 1)) {
-        text_positions <- c(text_positions,
-                            ((cumsum(splits)[i + 1] -
-                                cumsum(splits)[i])/2 +
-                               cumsum(splits)[i]))
-      }
-
-      # smaller headlines
-      mtext(groups, side = 3, line = 0, outer = FALSE, at = text_positions,
-            adj = NA, padj = NA, cex = 0.8, col = groups_col,
-            font = NA)
-    }
-    mtext(title, side = 3, line = -1, outer = TRUE, font = 2)
-
-
-    # draw the subtypes
-    axis(side = 2, at = 0.5,
-         labels = c("ref"="Ref. labels",
-                    "prediction"="Predictions",
-                    "platform"="Platform/Study")[top_anno],
-         las = 1, cex.axis = 0.7, tick = 0)
-    for (f in groups) {
-      for (g in which(lab == f)) {
-        rect(g - 1, 0, g, 1, col = groups_col[f], border = NA)
-      }
-    }
-
-    # the box and the white lines
-    box(lwd = 1)
-    li <- cumsum(splits)
-    abline(v=li, lwd = 1.5, lty=1, col="black")
-  }
-
-  ### plot next annos ###
-  for (i in anno_ord) {
+    ### plot top_anno ###
     {
       # Subtype annotation
-      Gap      <- 0.0
-      AreaStart<- AreaStart-Size-Gap
-      SizeUnit <- anno_height
-      Size     <- SizeUnit*1
-      AreaEnd  <- AreaStart-Size
-
+      AreaStart <- 0.94
+      SizeUnit  <- anno_height
+      Size <- SizeUnit * 1
+      AreaEnd <- AreaStart - Size
       par(fig = c(0, 1, AreaEnd, AreaStart), mar = margin,
-          mgp = c(3, 0.5, 0), new = TRUE)
+          mgp = c(3, 0.5, 0), new = FALSE)
       plot(c(0, 1), c(0, 1), type = "n", xaxs = "i", yaxs = "i",
            xlab = "", ylab = "", main = "", xlim = c(0, num_sam),
            ylim = c(0, 1), xaxt = "n", yaxt = "n", bty = "n")
 
-      # draw the annotation name
+      if (is.null(sam_order)){
+        # headlines
+        text_positions <- cumsum(splits)[1]/2
+        for (i in 1:(length(cumsum(splits)) - 1)) {
+          text_positions <- c(text_positions,
+                              ((cumsum(splits)[i + 1] -
+                                  cumsum(splits)[i])/2 +
+                                 cumsum(splits)[i]))
+        }
+
+        # smaller headlines
+        mtext(groups, side = 3, line = 0, outer = FALSE, at = text_positions,
+              adj = NA, padj = NA, cex = 0.8, col = groups_col,
+              font = NA)
+      }
+      mtext(title, side = 3, line = -1, outer = TRUE, font = 2)
+
+
+      # draw the subtypes
       axis(side = 2, at = 0.5,
            labels = c("ref"="Ref. labels",
-                      "platform"="Platform/Study")[i],
+                      "prediction"="Predictions",
+                      "platform"="Platform/Study")[top_anno],
            las = 1, cex.axis = 0.7, tick = 0)
-
-      if (i == "ref") {
-        tmp_color <- ref_col
-        tmp_lab   <- L
-      }
-      if (i == "platform") {
-        tmp_color <- platform_col
-        tmp_lab   <- P
-      }
-
-      for (f in unique(tmp_lab)) {
-        for (g in which(tmp_lab == f)) {
-          rect(g - 1, 0, g, 1, col = tmp_color[f], border = NA)
+      for (f in groups) {
+        for (g in which(lab == f)) {
+          rect(g - 1, 0, g, 1, col = groups_col[f], border = NA)
         }
       }
 
@@ -5024,64 +4997,113 @@ cocluster_RF <- function(object,
       li <- cumsum(splits)
       abline(v=li, lwd = 1.5, lty=1, col="black")
     }
-  }
 
-  ### plot binary heatmaps ###
-  # to know the height of the heatmap
-  Size <- AreaEnd-0.08-0.08
+    ### plot next annos ###
+    for (i in anno_ord) {
+      {
+        # Subtype annotation
+        Gap      <- 0.0
+        AreaStart<- AreaStart-Size-Gap
+        SizeUnit <- anno_height
+        Size     <- SizeUnit*1
+        AreaEnd  <- AreaStart-Size
 
-  ###
-  Gap       <- 0.005
-  AreaStart <- AreaEnd-Gap
-  AreaEnd   <- AreaStart-Size
-  ###
+        par(fig = c(0, 1, AreaEnd, AreaStart), mar = margin,
+            mgp = c(3, 0.5, 0), new = TRUE)
+        plot(c(0, 1), c(0, 1), type = "n", xaxs = "i", yaxs = "i",
+             xlab = "", ylab = "", main = "", xlim = c(0, num_sam),
+             ylim = c(0, 1), xaxt = "n", yaxt = "n", bty = "n")
 
-  par(fig = c(0, 1, AreaEnd, AreaStart),
-      mar = margin, mgp = c(3, 0.5, 0), new=TRUE)
+        # draw the annotation name
+        axis(side = 2, at = 0.5,
+             labels = c("ref"="Ref. labels",
+                        "platform"="Platform/Study")[i],
+             las = 1, cex.axis = 0.7, tick = 0)
 
-  myplot <- plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
-                 xlab = "", ylab = "", main = "",
-                 xlim = c(0, num_sam), ylim = c(0, num_sam),
-                 xaxt = "n", yaxt = "n", bty = "n")
+        if (i == "ref") {
+          tmp_color <- ref_col
+          tmp_lab   <- L
+        }
+        if (i == "platform") {
+          tmp_color <- platform_col
+          tmp_lab   <- P
+        }
 
-  HM_colors <- colorRampPalette(c("white","darkblue"))(100)
+        for (f in unique(tmp_lab)) {
+          for (g in which(tmp_lab == f)) {
+            rect(g - 1, 0, g, 1, col = tmp_color[f], border = NA)
+          }
+        }
 
-  prox <- round(prox, 2)
-  prox <- prox*100
-
-  prox <- as.matrix(prox)
-  prox[which(prox<1)]   <- 1
-  prox[which(prox>100)] <- 100
-
-  for(f in 1:ncol(prox)){
-    for(g in 1:nrow(prox)){
-      rect(f-1,g,f,g-1,col=HM_colors[prox[g,f]],border=NA,lwd=0)
+        # the box and the white lines
+        box(lwd = 1)
+        li <- cumsum(splits)
+        abline(v=li, lwd = 1.5, lty=1, col="black")
+      }
     }
-  }
 
-  box(lwd=1)
+    ### plot binary heatmaps ###
+    # to know the height of the heatmap
+    Size <- AreaEnd-0.08-0.08
 
-  ### plot legends
-  if (legend) {
-    par(fig = c(0, 1, 0.02, (AreaEnd-0.01)),
+    ###
+    Gap       <- 0.005
+    AreaStart <- AreaEnd-Gap
+    AreaEnd   <- AreaStart-Size
+    ###
+
+    par(fig = c(0, 1, AreaEnd, AreaStart),
         mar = margin, mgp = c(3, 0.5, 0), new=TRUE)
-    plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
-         xlab = "", ylab = "", main = "",
-         xlim = c(0, num_sam), ylim = c(0, 1),
-         xaxt = "n", yaxt = "n", bty = "n")
 
-    if (!is.null(P) & show_platform) {
-      legend(x = "topright", title = "Platform/study",
-             ncol = length(platforms_ord), cex = 0.5,
-             legend = platforms_ord,
-             fill = platform_col)
+    myplot <- plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
+                   xlab = "", ylab = "", main = "",
+                   xlim = c(0, num_sam), ylim = c(0, num_sam),
+                   xaxt = "n", yaxt = "n", bty = "n")
+
+    HM_colors <- colorRampPalette(c("white","darkblue"))(100)
+
+    prox <- round(prox, 2)
+    prox <- prox*100
+
+    prox <- as.matrix(prox)
+    prox[which(prox<1)]   <- 1
+    prox[which(prox>100)] <- 100
+
+    for(f in 1:ncol(prox)){
+      for(g in 1:nrow(prox)){
+        rect(f-1,g,f,g-1,col=HM_colors[prox[g,f]],border=NA,lwd=0)
+      }
     }
 
-    legend(x = "topleft", title = "Ref labels",
-           ncol = length(classes), cex = 0.5,
-           legend = names(ref_col),
-           fill = ref_col)
+    box(lwd=1)
+
+    ### plot legends
+    if (legend) {
+      par(fig = c(0, 1, 0.02, (AreaEnd-0.01)),
+          mar = margin, mgp = c(3, 0.5, 0), new=TRUE)
+      plot(c(0,1),c(0,1), type="n", xaxs='i', yaxs='i',
+           xlab = "", ylab = "", main = "",
+           xlim = c(0, num_sam), ylim = c(0, 1),
+           xaxt = "n", yaxt = "n", bty = "n")
+
+      if (!is.null(P) & show_platform) {
+        legend(x = "topright", title = "Platform/study",
+               ncol = length(platforms_ord), cex = 0.5,
+               legend = platforms_ord,
+               fill = platform_col)
+      }
+
+      legend(x = "topleft", title = "Ref labels",
+             ncol = length(classes), cex = 0.5,
+             legend = names(ref_col),
+             fill = ref_col)
+    }
   }
+
+  # return proximity matrix
+  if (return_matrix){
+    return(prox_return)
+   }
 }
 
 ##### print functions #####

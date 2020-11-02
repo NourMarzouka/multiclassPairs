@@ -1,4 +1,10 @@
-# multiclassPairs v0.2.2 (Release date: 2020-11-02)
+# multiclassPairs v0.3.0 (Release date: 2020-11-02)
+
+### changes:
+* proximity_matrix_RF replaced cocluster_RF function and it can return and plot the proximity matrix
+
+
+# multiclassPairs v0.2.2 (Release date: 2020-10-09)
 
 ### Additions:
 * Tutorial is available now.
@@ -14,6 +20,7 @@
 * border = NA instead of border = FALSE in plotting functions.
 * optimize_RF can handle two classes problems without errors
 * num.trees = num.trees missed in ranger for featureNo_altogether slots
+
 
 # multiclassPairs v0.2.1 (Release date: 2020-09-28)
 
