@@ -47,6 +47,7 @@ Nour-al-dain Marzouka <nour-al-dain.marzouka at med.lu.se>
 }
 
 \examples{
+# example of loading data from matrix
 Data <- matrix(runif(100000), nrow=100, ncol=100,
                dimnames = list(paste0("G",1:100), paste0("S",1:100)))
 
@@ -62,4 +63,29 @@ object <- ReadData(Data = Data,
                    Platform = P,
                    verbose = FALSE)
 object
+
+
+# Not to run
+# example of loading data from ExpressionSet
+# library(leukemiasEset, quietly = TRUE)
+# data(leukemiasEset)
+
+# split the data to training and testing
+# n <- ncol(leukemiasEset)
+# set.seed(1234)
+# training_samples <- sample(1:n,size = n*0.6)
+
+# train <- leukemiasEset[1:1000,training_samples]
+# test  <- leukemiasEset[1:1000,-training_samples]
+
+# create the data object
+# when we use Expressionset we can use the name of the phenotypes variable
+# ReadData will automatically extract the phenotype variable and use it as class labels
+# the same can be used with the Platform/study labels
+# in this example we are not using any platform labels, so leave it NULL
+# object <- ReadData(Data = train,
+#                   Labels = "LeukemiaType",
+#                   Platform = NULL,
+#                   verbose = FALSE)
+# object
 }

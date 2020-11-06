@@ -83,8 +83,7 @@ proximity_matrix_RF(object,
   Nour-al-dain Marzouka <nour-al-dain.marzouka at med.lu.se>
 }
 
-\examples{
-  # generate random data
+\examples{# generate random data
 Data <- matrix(runif(10000), nrow=100, ncol=80,
                dimnames = list(paste0("G",1:100), paste0("S",1:80)))
 
@@ -102,7 +101,7 @@ object <- ReadData(Data = Data,
 
 # sort genes
 genes_RF <- sort_genes_RF(data_object = object,
-                           seed=123456, verbose = FALSE)
+                          seed=123456, verbose = FALSE)
 
 # to get an idea of how many genes we will use
 # and how many rules will be generated
@@ -111,34 +110,109 @@ genes_RF <- sort_genes_RF(data_object = object,
 #                  genes_one_vs_rest = c(10,20,50,100,150,200))
 
 # creat and sort rules
-rules_RF <- sort_rules_RF(data_object = object,
-                           sorted_genes_RF = genes_RF,
-                           genes_altogether = 10,
-                           genes_one_vs_rest = 10,
-                           seed=123456, verbose = FALSE)
+# rules_RF <- sort_rules_RF(data_object = object,
+#                           sorted_genes_RF = genes_RF,
+#                           genes_altogether = 100,
+#                           genes_one_vs_rest = 100,
+#                           seed=123456,
+#                           verbose = FALSE)
 
-# train the final model
-# it is prefered to increase the number of trees and rules in case you have
-# large number of samples and features
-# for quick example, we have small number of trees and rules here
-RF_classifier <- train_RF(data_object = object,
-                          rules_altogether = 10,
-                          rules_one_vs_rest = 10,
-                          run_boruta = FALSE,
-                          plot_boruta = FALSE,
-                          num.trees = 300,
-                          sorted_rules_RF = rules_RF,
-                          verbose = FALSE)
+# parameters <- data.frame(
+#   gene_repetition=c(3,2,1),
+#   rules_one_vs_rest=0,
+#   rules_altogether=c(2,3,10),
+#   run_boruta=c(FALSE,"produce_error",FALSE),
+#   plot_boruta = FALSE,
+#   num.trees=c(100,200,300),
+#   stringsAsFactors = FALSE)
+# parameters
 
-# predict
-results <- predict_RF(classifier = RF_classifier,
-                       Data = object)
+# Or you can use expand.grid to generate dataframe with all parameter combinations
+# parameters <- expand.grid(
+#   gene_repetition=c(3,2,1),
+#   rules_one_vs_rest=0,
+#   rules_altogether=c(2,3,10),
+#   num.trees=c(100,500,1000),
+#   stringsAsFactors = FALSE)
+# parameters
+
+
+# test <- optimize_RF(data_object = object,
+#                     sorted_rules_RF = rules_RF,
+#                     test_object = NULL,
+#                     overall = c("Accuracy"),
+#                     byclass = NULL, verbose = FALSE,
+#                     parameters = parameters)
+# test
+# test$summary[which.max(test$summary$Accuracy),]
+#
+# # train the final model
+# # it is preferred to increase the number of trees and rules in case you have
+# # large number of samples and features
+# # for quick example, we have small number of trees and rules here
+# # based on the optimize_RF results we will select the parameters
+# RF_classifier <- train_RF(data_object = object,
+#                           gene_repetition = 1,
+#                           rules_altogether = 0,
+#                           rules_one_vs_rest = 10,
+#                           run_boruta = FALSE,
+#                           plot_boruta = FALSE,
+#                           probability = TRUE,
+#                           num.trees = 300,
+#                           sorted_rules_RF = rules_RF,
+#                           boruta_args = list(),
+#                           verbose = TRUE)
+#
+# # training accuracy
+# # get the prediction labels
+# # if the classifier trained using probability	= FALSE
+# training_pred <- RF_classifier$RF_scheme$RF_classifier$predictions
+# if (is.factor(training_pred)) {
+#   x <- as.character(training_pred)
+# }
+#
+# # if the classifier trained using probability	= TRUE
+# if (is.matrix(training_pred)) {
+#   x <- colnames(training_pred)[max.col(training_pred)]
+# }
+#
+# # training accuracy
+# caret::confusionMatrix(data =factor(x),
+#                 reference = factor(object$data$Labels),
+#                 mode = "everything")
 
 # not to run
+# visualize the binary rules in training dataset
+# plot_binary_RF(Data = object,
+#                classifier = RF_classifier,
+#                prediction = NULL, as_training = TRUE,
+#                show_scores = TRUE,
+#                top_anno = "ref",
+#                show_predictions = TRUE,
+#                title = "Training data")
+
+# not to run
+# Extract and plot the proximity matrix from the classifier for the training data
+# it takes long time for large data
 # proximity_mat <- proximity_matrix_RF(object = object,
 #                       classifier = RF_classifier,
 #                       plot=TRUE,
 #                       return_matrix=TRUE,
 #                       title = "Test",
 #                       cluster_cols = TRUE)
+
+# not to run
+# predict
+# test_object # any test data
+# results <- predict_RF(classifier = RF_classifier, impute = TRUE,
+#                       Data = test_object)
+#
+# # visualize the binary rules in training dataset
+# plot_binary_RF(Data = test_object,
+#                classifier = RF_classifier,
+#                prediction = results, as_training = FALSE,
+#                show_scores = TRUE,
+#                top_anno = "ref",
+#                show_predictions = TRUE,
+#                title = "Test data")
 }

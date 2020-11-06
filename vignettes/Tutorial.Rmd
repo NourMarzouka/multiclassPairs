@@ -1,0 +1,570 @@
+---
+title: "Tutorial for multiclassPairs R package"
+author:
+  - name: "By Nour-al-dain Marzouka"
+    email: "nour-al-dain.marzouka@med.lu.se"
+date: '`r paste0("Created: ", format(Sys.Date(), "%d/%m/%Y"))`'
+output:
+  BiocStyle::html_document:
+    toc: TRUE
+    number_sections: TRUE
+    toc_float:
+      collapsed: FALSE
+      smooth_scroll: TRUE
+vignette: >
+  %\VignetteIndexEntry{Tutorial for multiclassPairs R package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r style, echo = FALSE, results = 'asis'}
+  BiocStyle::markdown()
+```
+  
+```{r setup, include=FALSE, echo=F, warning= F, message=F}
+knitr::opts_chunk$set(
+  message = FALSE, #fig.height = 6, fig.width = 6,
+  warning = FALSE, 
+  error = FALSE, 
+  tidy = FALSE,
+  fig.align = "center", 
+  #  dpi = 600, 
+  cache = TRUE,
+  progress = FALSE, 
+  quite = TRUE
+)
+
+library(BiocStyle)
+#BiocStyle::latex(relative.path = TRUE)
+
+library(knitr)
+```
+
+In this tutorial we show how to use the different functions and options in `multiclassPairs` package (v`r packageVersion("multiclassPairs")`), including training a pairs-based classifier, predict classes in test data, and visualize the prediction scores and rules.
+
+# Installation
+
+`multiclassPairs` package is available on [CRAN](https://cran.r-project.org/web/packages/multiclassPairs/index.html) and [GitHub](https://github.com/NourMarzouka/multiclassPairs). You can use the following code to install `multiclassPairs` package from [CRAN](https://cran.r-project.org/web/packages/multiclassPairs/index.html) and [GitHub](https://github.com/NourMarzouka/multiclassPairs) and its dependencies from Bioconductor.
+
+```{r, message=FALSE}
+# Install the released version from CRAN using
+if (!requireNamespace("multiclassPairs", quietly = TRUE)) {
+  install.packages("multiclassPairs")
+}
+
+# Or install the dev version from GitHub using
+# if (!requireNamespace("multiclassPairs", quietly = TRUE)) {
+#  if (!requireNamespace("devtools", quietly = TRUE)) {
+#    install.packages("devtools")
+#  }
+#  library(devtools) # this package is needed to install from GitHub
+#  install_github("NourMarzouka/multiclassPairs")
+#}
+
+# Install the dependencies from Bioconductor
+# BiocManager, Biobase, and switchBox packages from Bioconductor are needed
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
+if (!requireNamespace("Biobase", quietly = TRUE)) {
+  BiocManager::install("Biobase")
+}
+if (!requireNamespace("switchBox", quietly = TRUE)) {
+  BiocManager::install("switchBox")
+}
+
+# load multiclassPairs library
+library(multiclassPairs)
+```
+
+# Workflow
+
+The workflow in `multiclassPairs` is summarized in the next figure:
+```{r, echo=FALSE,fig.cap="Workflow in multiclassPairs R package: Functions are colored in green."}
+knitr::include_graphics("images/workflow_v0_2_1.png")
+```
+
+The workflow always starts with `ReadData` function. Then you have two schemes to train your pairs-based classifier:
+
+- First option is a one-vs-rest scheme that assemble one-vs-rest binary classifiers built by 'switchBox' package which uses Top-score pairs (TSP) algorithm. 
+- The second option is a scheme based on a novel implementation of the random forest (RF) algorithm.
+
+For more complex predictions, RF performs better. For less complex predictions, we recommend to use one-vs-rest due to its straightforward application and interpretation. 
+
+Both workflows begin by filtering the features, then combining the filtered features to make the list of all the possible rules (i.e. rule1: feature1 < feature2, rule2: feature1 < feature3, etc...). Then the list of rules will be filtered and the most important and informative rules will be kept. The informative rules will be assembled in an one-vs-rest model or in an RF model. We provide a detailed description for the methodologies for each step in the help files in the package.
+
+# Create data object
+
+`ReadData` takes the data (data.frame/matrix/ExpressionSet) and class labels for the samples, then generates a data object to be used in the downstream steps, such as genes filtering, training, and visualization. 
+
+Optionally, `ReadData` accepts additional platform/study labels and includes it in the data object when more than one platform/study are involved, this helps in performing the downstream steps in platform/study wise manner, where the filtering of the genes/rules is performed in the samples of each platform/study separately, then the top genes/rules in all of the platforms/studies are selected.
+
+Here is an example of creating data object using a matrix:
+```{r, message=FALSE}
+library(multiclassPairs)
+
+# example of creating data object from matrix
+# we will generate fake data in this example
+# matrix with random values
+Data <- matrix(runif(100000), 
+               nrow=100, 
+               ncol=100, 
+               dimnames = list(paste0("G",1:100), 
+                               paste0("S",1:100)))
+# class labels
+L1 <- sample(x = c("A","B","C"), size = 100, replace = TRUE)
+
+# platform/study labels
+P1 <- sample(x = c("P1","P2"), size = 100, replace = TRUE)
+
+# create the data object
+object <- ReadData(Data = Data,
+                   Labels = L1,
+                   Platform = P1,
+                   verbose = FALSE)
+object
+```
+
+Here is a real example using [`leukemiasEset`](https://bioconductor.org/packages/release/data/experiment/html/leukemiasEset.html) data from Bioconductor packages, which is an `Expressionset` containing gene expression data from 60 bone marrow samples of patients with one of the four main types of leukemia (ALL, AML, CLL, CML) or non-leukemia.
+
+```{r, message=FALSE}
+library(multiclassPairs, quietly = TRUE)
+
+# install Leukemia cancers data
+if (!requireNamespace("BiocManager", quietly = TRUE)){
+  install.packages("BiocManager")
+}
+if (!requireNamespace("leukemiasEset", quietly = TRUE)){
+  BiocManager::install("leukemiasEset")
+}
+
+# load the data package
+library(leukemiasEset, quietly = TRUE)
+data(leukemiasEset)
+```
+
+```{r, message=FALSE}
+# check the Expressionset
+leukemiasEset
+
+# explore the phenotypes data
+knitr::kable(head(pData(leukemiasEset)))
+
+# We are interested in LeukemiaType
+knitr::kable(table(pData(leukemiasEset)[,"LeukemiaType"]))
+
+# split the data
+# 60% as training data and 40% as testing data
+n <- ncol(leukemiasEset)
+set.seed(1234)
+training_samples <- sample(1:n,size = n*0.6)
+
+train <- leukemiasEset[1:1000,training_samples]
+test  <- leukemiasEset[1:1000,-training_samples]
+
+# just to be sure there are no shared samples between the training and testing data
+sum(sampleNames(test) %in% sampleNames(train)) == 0
+
+# create the data object
+# when we use Expressionset we can use the name of the phenotypes variable 
+# ReadData will automatically extract the phenotype variable and use it as class labels
+# the same can be used with the Platform/study labels
+# in this example we are not using any platform labels, so leave it NULL
+object <- ReadData(Data = train, 
+                   Labels = "LeukemiaType", 
+                   Platform = NULL, 
+                   verbose = FALSE)
+object
+```
+
+# One-vs-rest scheme
+One-vs-rest scheme is composed from binary individual classifiers for each class (i.e. each class versus others). Each binary classifier votes (i.e. give a score) for the predicted sample, and the sample's class is predicted based on the highest score.
+
+```{r, echo=FALSE, fig.cap="One-vs-rest scheme"}
+knitr::include_graphics("images/one_vs_rest_scheme.png")
+```
+
+## Gene filtering
+For building a pairs-based classifier with a one-vs-rest scheme, 
+we start by selecting top differentially expressed genes using the `filter_genes_TSP` function. This reduces the number of gene combinations (rules) in the next steps. This function can perform the filtering in different ways and return the top differential expressed genes for each class. 
+
+`filter_genes_TSP` function provides two options for gene filtering. Both options begins by ranking the data (i.e. in-sample ranking). The first option performs one-vs-rest comparison using Wilcoxon test and then selects a number of the top genes. Wilcoxon test is done separately for each class. The second option performs one-vs-one comparison using Dunn's test, and then selects a number of the top genes. Dunn's test is performed for all classes together.
+
+```{r, echo=FALSE, fig.cap="Gene filtering options"}
+knitr::include_graphics("images/gene_filtering_TSP.png")
+```
+
+Previous filtering options can be done for samples from each platform/study separately, then the top genes in all platforms/studies will be selected.
+
+```{r, echo=FALSE, fig.cap="Platform-wise gene filtering"}
+knitr::include_graphics("images/platform_wise_gene_filtering_TSP.png")
+```
+The reason for using one-vs-one gene filtering is to give more weight to small classes. The reason for using platform-wise gene filtering is to give more weight to platforms with small sample size, and to select genes that are important in all platforms/studies. However, one-vs-one and platform-wise options does not guarantee better results but they are valid options to be considered during the training process.
+
+More details about the filtering process is mentioned in the documentation of `filter_genes_TSP` function.
+
+Here we will run a simple gene filtering example on the [`leukemiasEset`](https://bioconductor.org/packages/release/data/experiment/html/leukemiasEset.html) data.
+
+```{r}
+# let's go with gene filtering using one_vs_one option
+# for featureNo argument, a sufficient number of returned features is 
+# recommended if large number of rules is used in the downstream training steps.
+filtered_genes <- filter_genes_TSP(data_object = object,
+                                   filter = "one_vs_one",
+                                   platform_wise = FALSE,
+                                   featureNo = 1000,
+                                   UpDown = TRUE,
+                                   verbose = TRUE)
+filtered_genes
+```
+We asked for 1000 filtered genes per class (i.e. `featureNo` argument) but the filtered genes object has less than 1000 genes per class. This is because the function did not find enough genes matching the top genes criteria (i.e. high/low in the class and the opposite in the other classes).
+
+## Model training
+After filtering the genes, we can train our model using `train_one_vs_rest_TSP` function. This function combines the filtered genes as binary rules (GeneA < GeneB, GeneA < GeneC, etc.) then rules are sorted based on their score, and the optimal number of rules among the input range (i.e. `k_range` argument) is selected. The optimal number of rules is determined internally through the `SWAP.Train.KTSP` function from `switchBox` which uses Variance Optimization (VO) method as in (Afsari et al. 2014).
+
+Rules scoring is performed by the traditional scoring method [(Geman et al. 2004)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1989150/). Briefly, the score for a given rule equals the percentage of samples those are TRUE for the rule in the class minus the percentage of the samples those are TRUE for the rule in another group(s). `train_one_vs_rest_TSP` function gives two scoring options: one-vs-rest and one-vs-one. In one-vs-rest scoring option, all the rest classes are grouped in one 'rest' group. In one-vs-one scoring option, the score is calculated as the mean of one-vs-one rule scores. The reason for using one-vs-one option is to give more weight to small classes.
+
+Scores can also be calculated in a platform-wise manner where the score is calculated in each platform/study separately, then the mean of these scores will be the final score for the rule.
+
+The `k_range` argument defining the candidate number of top rules from which the algorithm chooses to build the binary classifier for each class. 
+Note that during prediction process (i.e. class voting) binary classifiers with low number of rules tie more than binary classifiers with higher number of rules. Because of that, it is recommended to use sufficient number of rules to avoid the score ties. Sufficient number of rules depends on how many classes we have and on how much these classes are distinct from each other.
+
+Rules have two sides (i.e. GeneA < GeneB), usually rules are composed from two differently expressed genes (i.e. filtered genes). However, invariant genes (called pivot genes) can be involved in the rules through `include_pivot` argument. If `include_pivot` argument is TRUE, then the filtered genes will be combined with all genes in the data allowing rules in form of 'filtered genes < pivot gene' and 'pivot gene < filtered genes'. This may increase the training time due to increase the number of the possible rules.
+```{r}
+# Let's train our model
+classifier <- train_one_vs_rest_TSP(data_object = object,
+                                    filtered_genes = filtered_genes,
+                                    k_range = 5:50,
+                                    include_pivot = FALSE,
+                                    one_vs_one_scores = TRUE,
+                                    platform_wise_scores = FALSE,
+                                    seed = 1234,
+                                    verbose = FALSE)
+classifier
+```
+
+So, in our trained model we have `r length(classifier[[1]])` binary classifiers for the classes: `r names(classifier[[1]])`, with `r paste(unlist(lapply(classifier[[1]], function(x){nrow(x$TSPs)})), collapse = ",")` rules, respectively.
+
+## Prediction
+
+Now, let's apply our trained model on the training and testing data to assess its performance. We can do that through `predict_one_vs_rest_TSP` function.
+
+Note that, in some cases the testing data miss some features or genes, `predict_one_vs_rest_TSP` can deal with this through ignoring the rules with missed genes. However, if a lot of rules are ignored the prediction may be affected to large extend.
+
+`predict_one_vs_rest_TSP` returns a data.frame with class scores, score ties, and final prediction based on the max score.
+
+```{r}
+# apply on the training data
+# To have the classes in output in specific order, we can use classes argument
+results_train <- predict_one_vs_rest_TSP(classifier = classifier,
+                                         Data = object,
+                                         tolerate_missed_genes = TRUE,
+                                         weighted_votes = TRUE,
+                                         classes = c("ALL","AML","CLL","CML","NoL"),
+                                         verbose = TRUE)
+
+# apply on the testing data
+results_test <- predict_one_vs_rest_TSP(classifier = classifier,
+                                        Data = test,
+                                        tolerate_missed_genes = TRUE,
+                                        weighted_votes = TRUE,
+                                        classes=c("ALL","AML","CLL","CML","NoL"),
+                                        verbose = TRUE)
+# get a look over the scores in the testing data
+knitr::kable(head(results_test))
+```
+
+Let's check the accuracy in the training and testing data.
+
+```{r}
+# Confusion Matrix and Statistics on training data
+caret::confusionMatrix(data = factor(results_train$max_score, 
+                                     levels = unique(object$data$Labels)),
+                       reference = factor(object$data$Labels, 
+                                          levels = unique(object$data$Labels)),
+                       mode="everything")
+
+# Confusion Matrix and Statistics on testing data
+caret::confusionMatrix(data = factor(results_test$max_score, 
+                                     levels = unique(object$data$Labels)),
+                       reference = factor(pData(test)[,"LeukemiaType"], 
+                                          levels = unique(object$data$Labels)),
+                       mode="everything")
+```
+
+```{r, include=FALSE, results="hide"}
+# Confusion Matrix and Statistics on training data
+x1 <- caret::confusionMatrix(data = factor(results_train$max_score, 
+                                           levels = unique(object$data$Labels)),
+                             reference = factor(object$data$Labels, 
+                                                levels = unique(object$data$Labels)),
+                             mode="everything")
+
+# Confusion Matrix and Statistics on testing data
+x2 <- caret::confusionMatrix(data = factor(results_test$max_score, 
+                                           levels = unique(object$data$Labels)),
+                             reference = factor(pData(test)[,"LeukemiaType"], 
+                                                levels = unique(object$data$Labels)),
+                             mode="everything")
+
+```
+So we got `r round(x1$overall[["Accuracy"]],2)*100`% overall accuracy in the training data and `r round(x2$overall[["Accuracy"]],2)*100`% overall accuracy in the testing data.
+
+## Visualization
+Finally it is recommended to visualize the rules in the training and testing data. This will give you an idea to which level the rules and predictions are good.
+
+We can plot binary heatmap plots through `plot_binary_TSP` function as follows:
+
+```{r}
+# plot for the rules and scores in the training data
+plot_binary_TSP(Data = object, # we are using the data object here
+                classifier = classifier, 
+                prediction = results_train, 
+                classes = c("ALL","AML","CLL","CML","NoL"),
+                #margin = c(0,5,0,10),
+                title = "Training data")
+
+# plot for the rules and scores in the testing data
+plot_binary_TSP(Data = test, # ExpressionSet
+                ref = "LeukemiaType", # ref label names in pData
+                classifier = classifier, 
+                prediction = results_test, 
+                classes = c("ALL","AML","CLL","CML","NoL"),
+                title = "Testing data"#, 
+                #margin = c(0,5,0,10)
+                )
+```
+
+# Random Forest scheme
+
+In Random Forest (RF) scheme, all steps of gene filtering/sorting, rule filtering/sorting, and final model training are performed using the RF algorithm.
+
+The `ranger` package is used to run the RF algorithm, and arguments can be passed to `ranger` function if any changes are needed. For example, increasing the number of trees. Check the documentation of `multiclassPairs` for more details.
+
+## Gene sorting
+To reduce the number of the genes, `sort_genes_RF` function sorts the genes based on their importance and take the top important genes. Gene importance is determined based on the ability of the gene to split the classes better than other genes. Check [`ranger`](https://cran.r-project.org/web/packages/ranger/index.html) package for more details.
+
+To get the important (i.e. informative) genes `sort_genes_RF` function performs two types of sorting genes, first type is "altogether" which runs the RF algorithm to sort the genes based on their importance in all classes from each other, this generates one list of sorted genes for the whole data. The second type is "one_vs_rest" which runs the RF algorithm to sort the genes based on their importance in splitting one class from the rest, this generates sorted list of genes for each class. It is recommended (default) to run both, particularly in case of class imbalance in the training data.
+
+By default, all genes are sorted and returned, and the user can specify how many top genes will be used in the downstream functions. However, the user can specify how many genes should be returned using `featureNo_altogether` and `featureNo_one_vs_rest` arguments, and if one of these arguments is 0, then that sorting type will be skipped.
+
+Like One-vs-rest scheme, platform-wise option is available for the Random Forest scheme where the genes and rules can be sorted in each platform/study individually then the top genes in all of them will be taken. This gives more weight to small platforms/studies and try to get genes that function equally well in all platforms/studies.
+
+It is recommended to run all function in the RF scheme with seeds to get reproducible results each time.
+
+Let us run gene sorting function for the previous leukemia training data. Note that the data is not ranked by default here, but you can rank the data (ex. in case you are using non-normalized data) before sorting the genes using `rank_data`, the genes then will be ranked within each sample.
+```{r}                          
+# (500 trees here just for fast example)
+genes_RF <- sort_genes_RF(data_object = object,
+                          # featureNo_altogether, it is better not to specify a number here
+                          # featureNo_one_vs_rest, it is better not to specify a number here
+                          rank_data = TRUE,
+                          platform_wise = FALSE,
+                          num.trees = 500, # more features, more tress are recommended
+                          seed=123456, # for reproducibility
+                          verbose = TRUE)
+genes_RF # sorted genes object
+```
+## Rule sorting
+After we sorted the genes, we need to take the top genes and combine them as binary rules and then sort these rules. This can be performed using `sort_rules_RF` function. Here, we need to determine how many top genes to use.
+
+Like sorting genes options, rules sorting can be performed in "altogether", "one_vs_rest", and "platform_wise" options. By default, both "altogether" and "one_vs_rest" rule sorting are performed.
+
+**Parameter optimization:**
+
+The `summary_genes_RF` function is an optional function in the workflow. `summary_genes_RF` function gives an idea of how many genes you need to use to generate a specific number of rules.
+
+The `summary_genes_RF` function checks different values of `genes_altogether` and `genes_one_vs_rest` arguments in `sort_rules_RF` function. `summary_genes_RF` works as follows: take the first element in `genes_altogether` and `genes_one_vs_rest` arguments, then bring this number of top genes from altogether slot and one_vs_rest slots (this number of genes will be taken from each class), respectively, from the sorted_genes_RF object. Then pool the extracted genes and take the unique genes. Then calculate the number of the possible combinations. Store the number of unique genes and rules in first row in the output data.frame then pick the second element from the `genes_altogether` and `genes_one_vs_rest` and repeat the steps again. NOTE: gene replication in rules is not considered, because the rules are not sorted yet in the sorted_genes_RF object.
+
+Another way, but computationally more extensive, is to use large and sufficient number of genes, this will produce large number of rules, then we can use `run_boruta=TRUE` argument in the training function (i.e. `train_RF` function), this will remove the uninformative rules before training the final model.
+
+Let us run an example for `summary_genes_RF` function to get an idea of how many genes we will use, then we run `sort_rules_RF` function.
+```{r}
+# to get an idea of how many genes we will use
+# and how many rules will be generated
+summary_genes <- summary_genes_RF(sorted_genes_RF = genes_RF,
+                                  genes_altogether = c(10,20,50,100,150,200),
+                                  genes_one_vs_rest = c(10,20,50,100,150,200))
+knitr::kable(summary_genes)
+
+# 50 genes_altogether and 50 genes_one_vs_rest seems 
+# to give enough number of  rules and unique genes for our classes
+# (500 trees here just for fast example)
+# Now let's run sort_rules_RF to create the rules and sort them
+rules_RF <- sort_rules_RF(data_object = object, 
+                          sorted_genes_RF = genes_RF,
+                          genes_altogether = 50,
+                          genes_one_vs_rest = 50, 
+                          num.trees = 500,# more rules, more tress are recommended 
+                          seed=123456,
+                          verbose = TRUE)
+rules_RF # sorted rules object
+```
+
+## Model training
+Now, we have the rules sorted based on their importance. Now we can train our final RF model. We can go with the default settings in the `train_RF` function directly or we can check some different parameters to optimize the training process by running `optimize_RF` as in the next example:
+
+```{r, results="hide"}
+# prepare the simple data.frame for the parameters I want to test
+# names of arguments as column names
+# this df has three sets (3 rows) of parameters
+parameters <- data.frame(
+  gene_repetition=c(3,2,1),
+  rules_one_vs_rest=c(2,3,10),
+  rules_altogether=c(2,3,10),
+  run_boruta=c(FALSE,"make_error",TRUE), # I want to produce error in the 2nd trial
+  plot_boruta = FALSE,
+  num.trees=c(100,200,300),
+  stringsAsFactors = FALSE)
+
+# parameters
+# for overall and byclass possible options, check the help files
+para_opt <- optimize_RF(data_object = object,
+                        sorted_rules_RF = rules_RF,
+                        parameters = parameters,
+                        test_object = NULL,
+                        overall = c("Accuracy","Kappa"), # wanted overall measurements 
+                        byclass = c("F1"), # wanted measurements per class
+                        verbose = TRUE)
+
+para_opt # results object
+# para_opt$summary # the df of with summarized information
+knitr::kable(para_opt$summary)
+```
+
+Here, the 3rd trial pronounced good accuracy.
+
+It is recommend to run Boruta option (`run_boruta=TRUE`) to remove the uniformative rules, thus use less genes and rules in the model. Note: When `run_boruta=TRUE` the training process may take long time if the number of rules is large.
+
+It is recommended to train the final model with `probability=TRUE`, this will allow the model to give additional scores for each class instead of class prediction without scores. 
+
+We recommend that you visit the documentation of `train_RF` and `ranger` functions and to take a look over the different arguments and options there.
+```{r}
+# train the final model
+# it is preferred to increase the number of trees and rules in case you have
+# large number of samples and features
+# for quick example, we have small number of trees and rules here
+# based on the optimize_RF results we will select the parameters
+RF_classifier <- train_RF(data_object = object,
+                          sorted_rules_RF = rules_RF,
+                          gene_repetition = 1,
+                          rules_altogether = 10,
+                          rules_one_vs_rest = 10,
+                          run_boruta = TRUE, 
+                          plot_boruta = FALSE,
+                          probability = TRUE,
+                          num.trees = 300,
+                          boruta_args = list(),
+                          verbose = TRUE)
+```
+
+**Training data - quality check:** From the trained model we can extract a proximity matrix which is based on the fraction of times any two given out-of-bag samples receive the same predicted label in each tree. This gives us a better overview of the predictor performance in the training data, and the behavior of our reference labels. We can generate heatmap for the proximity matrix by `proximity_matrix_RF` function as follows:
+```{r}
+# plot proximity matrix of the out-of-bag samples
+# Note: this takes a lot of time if the data is big
+proximity_matrix_RF(object = object,
+             classifier = RF_classifier, 
+             plot = TRUE,
+             return_matrix = FALSE, # if we need to get the matrix itself
+             title = "Leukemias",
+             cluster_cols = TRUE)
+```
+
+## Training Accuracy
+
+For the training accuracy, we do not apply the RF model on the training data, because this gives 100% accuracy (almost always) which is not reliable. Instead we use the out-of-bag predictions, which can be obtained as follows:
+```{r}
+# training accuracy
+# get the prediction labels from the trained model
+# if the classifier trained using probability	= FALSE
+training_pred <- RF_classifier$RF_scheme$RF_classifier$predictions
+if (is.factor(training_pred)) {
+  x <- as.character(training_pred)
+}
+
+# if the classifier trained using probability	= TRUE
+if (is.matrix(training_pred)) {
+  x <- colnames(training_pred)[max.col(training_pred)]
+}
+
+# training accuracy
+caret::confusionMatrix(data =factor(x),
+                       reference = factor(object$data$Labels),
+                       mode = "everything")
+```
+
+```{r, include=FALSE, results="hide"}
+# training accuracy
+x1 <- caret::confusionMatrix(data =factor(x),
+                             reference = factor(object$data$Labels),
+                             mode = "everything")
+```
+
+## Prediction
+
+We predict the class in the test samples by running the `predict_RF` function. Note that you can use `impute = TRUE` to handle missed genes in the test data. This is done by filling the missed rule values based on the closest class values in each sample. RF models are good enough to handle large percent  of missed rules (up to 50% in some cases) without large effect on the accuracy of the prediction.
+
+```{r}
+# apply on test data
+results <- predict_RF(classifier = RF_classifier, 
+                      Data = test,
+                      impute = TRUE) # can handle missed genes by imputation
+
+# get the prediction labels
+# if the classifier trained using probability	= FALSE
+test_pred <- results$predictions
+if (is.factor(test_pred)) {
+  x <- as.character(test_pred)
+}
+
+# if the classifier trained using probability	= TRUE
+if (is.matrix(test_pred)) {
+  x <- colnames(test_pred)[max.col(test_pred)]
+}
+
+# training accuracy
+caret::confusionMatrix(data = factor(x),
+                       reference = factor(pData(test)[,"LeukemiaType"]),
+                       mode = "everything")
+```
+
+```{r, include=FALSE, results="hide"}
+x2 <- caret::confusionMatrix(data = factor(x),
+                             reference = factor(pData(test)[,"LeukemiaType"]),
+                             mode = "everything")
+```
+
+So we got `r round(x1$overall[["Accuracy"]],2)*100`% overall accuracy in the training data and `r round(x2$overall[["Accuracy"]],2)*100`% overall accuracy in the testing data.
+
+## Visualization
+
+`plot_binary_RF` can be used to plot binary heatmaps for the rules in training and testing datasets, as follow:
+
+```{r}
+#visualize the binary rules in training dataset
+plot_binary_RF(Data = object,
+               classifier = RF_classifier,
+               prediction = NULL, 
+               as_training = TRUE, # to extract the scores from the model
+               show_scores = TRUE,
+               top_anno = "ref",
+               show_predictions = TRUE, 
+               #margin = c(0,5,0,8),
+               title = "Training data")
+
+# visualize the binary rules in testing dataset
+plot_binary_RF(Data = test,
+               ref = "LeukemiaType", # Get ref labels from the test ExpressionSet
+               classifier = RF_classifier,
+               prediction = results, 
+               as_training = FALSE, 
+               show_scores = TRUE,
+               top_anno = "ref",
+               show_predictions = TRUE,
+               title = "Testing data")
+```
+
+# Session info
+```{r}
+sessionInfo()
+```

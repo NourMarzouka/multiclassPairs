@@ -3,6 +3,8 @@
 ### changes:
 * proximity_matrix_RF replaced cocluster_RF function and it can return and plot the proximity matrix
 
+### Bug fixes:
+* FIXED: plot_binary_RF does not get the predictions and scores when using as_training=TRUE and top_anno="platfrom" or "prediction"
 
 # multiclassPairs v0.2.2 (Release date: 2020-10-09)
 

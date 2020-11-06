@@ -193,6 +193,17 @@ ReadData <- function(Data,
     stop("NAs are not allowed in Platform!")
   }
 
+
+  # give warning message if the gene names have "-"
+  # This will give errors in RF models and Boruta and ranger
+  if (length(grep(x = rownames(Data_tmp), pattern = "-")) > 0) {
+    message("Gene names in the data have '-' symbol! This may generate errors during the training process of random forest! It is recommended to change these '-' to '_' or '.'")
+  }
+
+  if (length(grep(x = rownames(Data_tmp), pattern = ",")) > 0) {
+    message("Gene names in the data have ',' symbol! This may generate errors during the training process of random forest! It is recommended to change these ',' to '_' or '.'")
+  }
+
   # create the object
   object <- list(
     data = list(Data=Data_tmp,
@@ -1696,6 +1707,7 @@ plot_binary_TSP <- function(Data,
   }
   if (top_anno == "ref" & !show_ref) {
     message("show_ref was turned to TRUE because top_anno is 'ref'!")
+    show_ref <- TRUE
   }
 
   if (top_anno == "prediction" & is.null(pred)) {
@@ -1703,6 +1715,7 @@ plot_binary_TSP <- function(Data,
   }
   if (top_anno == "prediction" & !show_predictions) {
     message("show_predictions was turned to TRUE because top_anno is 'prediction'!")
+    show_predictions <- TRUE
   }
 
   if (top_anno == "platform" & is.null(P)) {
@@ -1710,6 +1723,7 @@ plot_binary_TSP <- function(Data,
   }
   if (top_anno == "platform" & !show_platform) {
     message("show_platform was turned to TRUE because top_anno is 'platform'!")
+    show_platform <- TRUE
   }
 
   if (any(!top_anno %in% c("ref", "prediction", "platform")) |
@@ -2195,6 +2209,17 @@ sort_genes_RF <- function (data_object,
   if (platform_wise == TRUE) {
     plat_vector <- data_object$data$Platform
     studies     <- unique(plat_vector)
+  }
+
+  # give warning message if the gene names have "-"
+  # This will give errors in RF models and Boruta and ranger
+  if (length(grep(x = rownames(D), pattern = "-")) > 0) {
+    message("Gene names in the data have '-' symbol! This may generate errors during the training process of random forest! It is recommended to change these '-' to '_' or '.'")
+    message("Note: '-' symbol in the gene names will be converted automatically to '_' by ranger function (i.e. random forest function)! This may cause problems when applying the classifier on data with gene names with '-' symbol (these genes will be missed)!")
+  }
+  if (length(grep(x = rownames(D), pattern = ",")) > 0) {
+    message("Gene names in the data have ',' symbol! This may generate errors during the training process of random forest! It is recommended to change these ',' to '_' or '.'")
+    message("Note: ',' symbol in the gene names will be converted automatically to '_' by ranger function (i.e. random forest function)! This may cause problems when applying the classifier on data with gene names with ',' symbol (these genes will be missed)!")
   }
 
   # Remove genes with NAs
@@ -3403,6 +3428,22 @@ train_RF <- function (data_object,
     D <- D[complete.cases(D),]
   }
 
+  # give warning message if the gene names have "-" and ","
+  # This will give errors in RF models and Boruta and ranger
+  if (length(grep(x = rownames(D), pattern = "-")) > 0) {
+    message("Note: '-' symbol in the gene names will be converted automatically to '_' by ranger function (i.e. random forest function)! This may cause problems when applying the classifier on data with gene names with '-' symbol (these genes will be missed)!")
+    if (run_boruta) {
+          stop("Gene names in the data have '-' symbol! This may generate errors during the training process of random forest when run_boruta=TRUE! It is recommended to change these '-' to '_' or '.'")
+    }
+  }
+
+  if (length(grep(x = rownames(D), pattern = ",")) > 0) {
+    message("Note: ',' symbol in the gene names will be converted automatically to '_' by ranger function (i.e. random forest function)! This may cause problems when applying the classifier on data with gene names with ',' symbol (these genes will be missed)!")
+    if (run_boruta) {
+      stop("Gene names in the data have ',' symbol! This may generate errors during the training process of random forest when run_boruta=TRUE! It is recommended to change these ',' to '_' or '.'")
+    }
+  }
+
   # Warning if wanted sorted rules > than the available rules - for altogether
   if (hasArg(rules_altogether)) {
     if (rules_altogether > length(sorted_rules_RF[[1]]$sorted_rules$all)) {
@@ -3784,6 +3825,7 @@ predict_RF <- function(classifier,
       message(capture.output(cat(genes[!genes %in% rownames(D)])))
       message("Gene names should as rownames and sample names as columns!")
       message("Check the genes in classifier object to see all the needed genes.")
+      message("Check if '-' or ',' symbols in the gene names in your data. You may need to change it to '_' or '.'")
     }
 
     if (impute == FALSE) {
@@ -4167,7 +4209,7 @@ plot_binary_RF <- function(Data,
   pred <- NULL
 
   # if as_training is true then extract the prediction labels from the classifier
-  if (show_predictions & as_training) {
+  if ((show_predictions & as_training) | (show_scores & as_training)) {
 
     tmp_here <- classifier$RF_scheme$RF_classifier$predictions
 
@@ -4260,15 +4302,18 @@ plot_binary_RF <- function(Data,
   }
   if (top_anno == "ref" & !show_ref) {
     message("show_ref was turned to TRUE because top_anno is 'ref'!")
+    show_ref <- TRUE
   }
 
   if (top_anno == "prediction" & is.null(pred)) {
+    message("Be sure that show_predictions = TRUE!")
     stop("top annotation (top_anno) is prediction while there is no prediction dataframe available!
          Use predict_RF function to generate it or use as_training to extract predictions from the classifier object if the plot is for training data!")
   }
 
   if (top_anno == "prediction" & !show_predictions) {
     message("show_predictions was turned to TRUE because top_anno is 'prediction'!")
+    show_predictions <- TRUE
   }
 
   if (top_anno == "platform" & is.null(P)) {
@@ -4276,6 +4321,7 @@ plot_binary_RF <- function(Data,
   }
   if (top_anno == "platform" & !show_platform) {
     message("show_platform was turned to TRUE because top_anno is 'platform'!")
+    show_platform <- TRUE
   }
 
   if (any(!top_anno %in% c("ref", "prediction", "platform")) |

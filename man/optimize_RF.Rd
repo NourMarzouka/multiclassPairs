@@ -59,8 +59,7 @@ return optimize_RF_output object which is a list caintains:
 Nour-al-dain Marzouka <nour-al-dain.marzouka at med.lu.se>
 }
 
-\examples{
-# generate random data
+\examples{# generate random data
 Data <- matrix(runif(10000), nrow=100, ncol=80,
                dimnames = list(paste0("G",1:100), paste0("S",1:80)))
 
@@ -102,8 +101,17 @@ genes_RF <- sort_genes_RF(data_object = object,
 #   plot_boruta = FALSE,
 #   num.trees=c(100,200,300),
 #   stringsAsFactors = FALSE)
-
 # parameters
+
+# Or you can use expand.grid to generate dataframe with all parameter combinations
+# parameters <- expand.grid(
+#   gene_repetition=c(3,2,1),
+#   rules_one_vs_rest=0,
+#   rules_altogether=c(2,3,10),
+#   num.trees=c(100,500,1000),
+#   stringsAsFactors = FALSE)
+# parameters
+
 
 # test <- optimize_RF(data_object = object,
 #                     sorted_rules_RF = rules_RF,
@@ -125,7 +133,7 @@ genes_RF <- sort_genes_RF(data_object = object,
 #                           rules_one_vs_rest = 10,
 #                           run_boruta = FALSE,
 #                           plot_boruta = FALSE,
-#                           probability = T,
+#                           probability = TRUE,
 #                           num.trees = 300,
 #                           sorted_rules_RF = rules_RF,
 #                           boruta_args = list(),
@@ -158,6 +166,16 @@ genes_RF <- sort_genes_RF(data_object = object,
 #                top_anno = "ref",
 #                show_predictions = TRUE,
 #                title = "Training data")
+
+# not to run
+# Extract and plot the proximity matrix from the classifier for the training data
+# it takes long time for large data
+# proximity_mat <- proximity_matrix_RF(object = object,
+#                       classifier = RF_classifier,
+#                       plot=TRUE,
+#                       return_matrix=TRUE,
+#                       title = "Test",
+#                       cluster_cols = TRUE)
 
 # not to run
 # predict
