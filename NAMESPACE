@@ -10,6 +10,7 @@ import(grDevices)
 import(methods)
 import(caret)
 import(e1071)
+import(rdist)
 
 # main object
 S3method(print, multiclassPairs_object)

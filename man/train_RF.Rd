@@ -79,9 +79,12 @@ any additional arguments to be passed to ranger function (i.e. random forest fun
 train_RF function extracts the lists of the sorted rules from altogether and classes slots, then it keep the top rules those fit with the gene_repetition number, this step reduces the number of the rule dramatically. From the left rules, rules_altogether and rules_one_vs_rest determine how many rules will be used. In case rules_altogether and rules_one_vs_rest were larger than the left rules then all the rules will be used. After that these rules will be pooled in one list and fid to Boruta function to remove the unimportant rules. Then random forest will be trained on the important rules.
 }
 \value{
-train_RF returns rule_based_RandomForest object which contains the final RF classifier and the used genes and rules in the final model. Boruta results are also included in the object.
-}
+train_RF returns rule_based_RandomForest object which contains the final RF classifier and the used genes and rules in the final model.
 
+Boruta results are also included in the object.
+
+The object also contains TrainingMatrix which is a binary matrix for the rules in the training data, this is used for imputation purposes during the prediction if the sample misses some values.
+}
 \author{
 Nour-al-dain Marzouka <nour-al-dain.marzouka at med.lu.se>
 }

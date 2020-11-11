@@ -44,7 +44,7 @@ In this tutorial we show how to use the different functions and options in `mult
 
 # Installation
 
-`multiclassPairs` package is available on [CRAN](https://cran.r-project.org/web/packages/multiclassPairs/index.html) and [GitHub](https://github.com/NourMarzouka/multiclassPairs). You can use the following code to install `multiclassPairs` package from [CRAN](https://cran.r-project.org/web/packages/multiclassPairs/index.html) and [GitHub](https://github.com/NourMarzouka/multiclassPairs) and its dependencies from Bioconductor.
+`multiclassPairs` package is available on [CRAN](https://cran.r-project.org/package=multiclassPairs) and [GitHub](https://github.com/NourMarzouka/multiclassPairs). You can use the following code to install `multiclassPairs` package from [CRAN](https://cran.r-project.org/package=multiclassPairs) and [GitHub](https://github.com/NourMarzouka/multiclassPairs) and its dependencies from Bioconductor.
 
 ```{r, message=FALSE}
 # Install the released version from CRAN using
@@ -81,7 +81,7 @@ library(multiclassPairs)
 
 The workflow in `multiclassPairs` is summarized in the next figure:
 ```{r, echo=FALSE,fig.cap="Workflow in multiclassPairs R package: Functions are colored in green."}
-knitr::include_graphics("images/workflow_v0_2_1.png")
+knitr::include_graphics("images/workflow_v0_3.png")
 ```
 
 The workflow always starts with `ReadData` function. Then you have two schemes to train your pairs-based classifier:
@@ -342,7 +342,7 @@ In Random Forest (RF) scheme, all steps of gene filtering/sorting, rule filterin
 The `ranger` package is used to run the RF algorithm, and arguments can be passed to `ranger` function if any changes are needed. For example, increasing the number of trees. Check the documentation of `multiclassPairs` for more details.
 
 ## Gene sorting
-To reduce the number of the genes, `sort_genes_RF` function sorts the genes based on their importance and take the top important genes. Gene importance is determined based on the ability of the gene to split the classes better than other genes. Check [`ranger`](https://cran.r-project.org/web/packages/ranger/index.html) package for more details.
+To reduce the number of the genes, `sort_genes_RF` function sorts the genes based on their importance and take the top important genes. Gene importance is determined based on the ability of the gene to split the classes better than other genes. Check [`ranger`](https://cran.r-project.org/package=ranger) package for more details.
 
 To get the important (i.e. informative) genes `sort_genes_RF` function performs two types of sorting genes, first type is "altogether" which runs the RF algorithm to sort the genes based on their importance in all classes from each other, this generates one list of sorted genes for the whole data. The second type is "one_vs_rest" which runs the RF algorithm to sort the genes based on their importance in splitting one class from the rest, this generates sorted list of genes for each class. It is recommended (default) to run both, particularly in case of class imbalance in the training data.
 
@@ -502,7 +502,7 @@ x1 <- caret::confusionMatrix(data =factor(x),
 
 ## Prediction
 
-We predict the class in the test samples by running the `predict_RF` function. Note that you can use `impute = TRUE` to handle missed genes in the test data. This is done by filling the missed rule values based on the closest class values in each sample. RF models are good enough to handle large percent  of missed rules (up to 50% in some cases) without large effect on the accuracy of the prediction.
+We predict the class in the test samples by running the `predict_RF` function. Note that you can use `impute = TRUE` to handle missed genes in the test data. This is done by filling the missed rule values based on the closest samples in the training data. RF models are good enough to handle large percent  of missed rules (up to 50% in some cases) without large effect on the accuracy of the prediction.
 
 ```{r}
 # apply on test data

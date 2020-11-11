@@ -1841,8 +1841,8 @@ plot_binary_TSP <- function(Data,
 
       tmp_r <- C$classifiers[[i]]$TSPs
 
-      tmp_binary <- D[tmp_r[,1],select_samples] > D[tmp_r[,2],select_samples]
-      d   <- dist(t(tmp_binary[,select_samples]), method = "euclidean")
+      tmp_binary <- D[tmp_r[,1],select_samples,drop=FALSE] > D[tmp_r[,2],select_samples,drop=FALSE]
+      d   <- dist(t(tmp_binary[,select_samples,drop=FALSE]), method = "euclidean")
       fit <- hclust(d, method="ward.D2")
       tmp <- c(tmp, fit$labels[fit$order])
     }
@@ -1865,8 +1865,8 @@ plot_binary_TSP <- function(Data,
     for(i in groups){
       select_samples <- sam_names[lab==i]
 
-      tmp_binary <- D[tmp_r[,1],select_samples] > D[tmp_r[,2],select_samples]
-      d   <- dist(t(tmp_binary[,select_samples]), method = "euclidean")
+      tmp_binary <- D[tmp_r[,1],select_samples,drop=FALSE] > D[tmp_r[,2],select_samples,drop=FALSE]
+      d   <- dist(t(tmp_binary[,select_samples,drop=FALSE]), method = "euclidean")
       fit <- hclust(d, method="ward.D2")
       tmp <- c(tmp, fit$labels[fit$order])
     }
@@ -2051,7 +2051,7 @@ plot_binary_TSP <- function(Data,
   for (o in groups){
     tmp <- C$classifiers[[o]]$TSPs
 
-    binary <- D[tmp[,1],] > D[tmp[,2],]
+    binary <- D[tmp[,1],,drop=FALSE] > D[tmp[,2],,drop=FALSE]
     binary <- binary + 1 # to fit with the indexes for the colors
 
     # cluster the rules
@@ -2803,7 +2803,7 @@ sort_rules_RF <- function (data_object,
     message()
   }
   # get binary matrix for training RF
-  binary    <- D[pairs[1,],] < D[pairs[2,],]
+  binary    <- D[pairs[1,],,drop=FALSE] < D[pairs[2,],,drop=FALSE]
   rownames(binary) <- paste0(pairs[1,],"__",pairs[2,])
 
   # filtering
@@ -3489,7 +3489,7 @@ train_RF <- function (data_object,
   object_tmp <- list(
     RF_scheme = list(genes=NULL,
                      rules=NULL,
-                     mode=NULL,
+                     TrainingMatrix=NULL, # for kNN
                      boruta=NULL,
                      RF_classifier=NULL,
                      calls=c()))
@@ -3609,7 +3609,7 @@ train_RF <- function (data_object,
   gene1 <- rules[,1]
   gene2 <- rules[,2]
 
-  for_flip <- rowSums(D[gene1,] < D[gene2,])
+  for_flip <- rowSums(D[gene1,,drop=FALSE] < D[gene2,,drop=FALSE])
   for_flip <- for_flip > (ncol(D)/2)
 
   from1 <- gene1[for_flip]
@@ -3634,7 +3634,7 @@ train_RF <- function (data_object,
   }
 
   # get binary matrix for training RF
-  binary    <- D[gene1,] < D[gene2,]
+  binary    <- D[gene1,,drop=FALSE] < D[gene2,,drop=FALSE]
   rownames(binary) <- paste0(gene1,"__",gene2)
 
   ###
@@ -3729,24 +3729,26 @@ train_RF <- function (data_object,
 
   # store the "centroids" to be used to impute missing values in testing data
   #Get the most common value function
-  getmode <- function(v) {
-    uniqv <- unique(v)
-    uniqv[which.max(tabulate(match(v, uniqv)))]
-  }
+  # getmode <- function(v) {
+  #   uniqv <- unique(v)
+  #   uniqv[which.max(tabulate(match(v, uniqv)))]
+  # }
+  #
+  # #Get the most common value for each class (groups) Get it from the TRAINING_LABELS vector
+  # ModeVector <- lapply(groups,function(x){
+  #   apply(binary[, which(L==x)], 1, getmode)
+  # })
+  # names(ModeVector) <- groups
+  # ModeVector <- do.call("cbind", ModeVector)
 
-  #Get the most common value for each class (groups) Get it from the TRAINING_LABELS vector
-  ModeVector <- lapply(groups,function(x){
-    apply(binary[, which(L==x)], 1, getmode)
-  })
-  names(ModeVector) <- groups
-  ModeVector <- do.call("cbind", ModeVector)
-
+  colnames(binary) <- paste0("S",1:ncol(binary))
 
   # store in object
   object_tmp$RF_scheme$genes <- genes
   object_tmp$RF_scheme$rules <- data.frame(rules,
                                            stringsAsFactors = FALSE)
-  object_tmp$RF_scheme$mode <- ModeVector
+  # object_tmp$RF_scheme$mode <- ModeVector
+  object_tmp$RF_scheme$TrainingMatrix <- t(binary) # kNN
   object_tmp$RF_scheme$RF_classifier <- rf_all
   object_tmp$RF_scheme$calls <- param
 
@@ -3757,7 +3759,8 @@ train_RF <- function (data_object,
 predict_RF <- function(classifier,
                        Data,
                        impute = FALSE,
-                       impute_reject=0.67,
+                       impute_reject = 0.67,
+                       impute_kNN = 5, # for kNN
                        verbose = TRUE) {
 
   # check the object class
@@ -3868,7 +3871,7 @@ predict_RF <- function(classifier,
   }
 
   # produce the binary matrix
-  binary <- complete[rules$gene1,] < complete[rules$gene2,]
+  binary <- complete[rules$gene1, , drop=FALSE] < complete[rules$gene2, , drop=FALSE]
   rownames(binary) <- paste0(rules$gene1,
                              "__",
                              rules$gene2)
@@ -3876,8 +3879,15 @@ predict_RF <- function(classifier,
 
   #Impute if needed
   if (impute) {
+
+    getmode <- function(v) {
+      uniqv <- unique(v)
+      uniqv[which.max(tabulate(match(v, uniqv)))]
+    }
+
     # get the mode values from the training data - stored in the classifier object
-    mode_df <- classifier$RF_scheme$mode
+    # mode_df <- classifier$RF_scheme$mode
+    TrainingMatrix_df <- classifier$RF_scheme$TrainingMatrix
 
     # to store the index for the samples to be removed
     # due to lack of a lot of rules
@@ -3908,28 +3918,39 @@ predict_RF <- function(classifier,
 
       # remove the NAs before find the dist
       ok_rules <- names(which(is_na==FALSE))
-      sam      <- binary[ok_rules,i, drop=FALSE]
+      impute_rules <- names(which(is_na == TRUE)) #Pontus
 
-      dist_mat <- as.matrix(dist(t(cbind(sam, mode_df[ok_rules,])),
-                                 method="binary"))
+      dist_mat <- cdist(TrainingMatrix_df[, ok_rules],
+                        t(binary[ok_rules, i, drop=FALSE]),
+                        metric="jaccard") #Pontus (Uses the package "rdist"
 
-      # remove the first because it is the sample itself
-      closest  <- which.min(dist_mat[-1,1])
-      closest  <- names(closest)[1]
+      binary[impute_rules, i] <- apply(TrainingMatrix_df[head(order(dist_mat[,1]),
+                                                              impute_kNN),
+                                                        impute_rules,
+                                                        drop=FALSE],
+                                       2, getmode)
 
-      # get the rules those need imputation for this sample
-      impute_rules <- names(which(is_na==TRUE))
+      # sam      <- binary[ok_rules,i, drop=FALSE]
 
-      # get the mode values as imputations
-      binary[impute_rules, i] <- mode_df[impute_rules, closest]
+      # dist_mat <- as.matrix(dist(t(cbind(sam, mode_df[ok_rules,])),
+      #                            method="binary"))
+      #
+      # # remove the first because it is the sample itself
+      # closest  <- which.min(dist_mat[-1,1])
+      # closest  <- names(closest)[1]
+      #
+      # # get the rules those need imputation for this sample
+      # impute_rules <- names(which(is_na==TRUE))
+      #
+      # # get the mode values as imputations
+      # binary[impute_rules, i] <- mode_df[impute_rules, closest]
     }
 
     # tell the user that we skipped these samples
     if (length(to_remove_sam)>0) {
       message("#####")
-      message("More than two thirds of the rules are missed in ",
-              length(to_remove_sam),
-              " sample(s), because of that these sample(s) were removed from the prediction:")
+      message(length(to_remove_sam),
+              " sample(s) with missed values and passed the impute_reject cutoff, because of that these sample(s) were removed from the prediction:")
       message(paste0(colnames(binary)[to_remove_sam],
                      collapse = " "))
       message("#####")
@@ -4439,7 +4460,7 @@ plot_binary_RF <- function(Data,
 
       tmp_r <- C$RF_scheme$rules
 
-      tmp_binary <- D[tmp_r[,1],select_samples] < D[tmp_r[,2],select_samples]
+      tmp_binary <- D[tmp_r[,1],select_samples, drop=FALSE] < D[tmp_r[,2],select_samples, drop=FALSE]
       d   <- dist(t(tmp_binary[,select_samples]), method = "euclidean")
       fit <- hclust(d, method="ward.D2")
       tmp <- c(tmp, fit$labels[fit$order])
@@ -4462,7 +4483,7 @@ plot_binary_RF <- function(Data,
     for(i in groups){
       select_samples <- sam_names[lab==i]
 
-      tmp_binary <- D[tmp_r[,1],select_samples] < D[tmp_r[,2],select_samples]
+      tmp_binary <- D[tmp_r[,1],select_samples,drop=FALSE] < D[tmp_r[,2],select_samples,drop=FALSE]
       d   <- dist(t(tmp_binary[,select_samples]), method = "euclidean")
       fit <- hclust(d, method="ward.D2")
       tmp <- c(tmp, fit$labels[fit$order])
@@ -4646,7 +4667,7 @@ plot_binary_RF <- function(Data,
 
   tmp <- C$RF_scheme$rules
 
-  binary <- D[tmp[,1],] < D[tmp[,2],]
+  binary <- D[tmp[,1],,drop=FALSE] < D[tmp[,2], ,drop=FALSE]
   binary <- binary + 1 # to fit with the indexes for the colors
 
   # cluster the rules
@@ -4844,7 +4865,7 @@ proximity_matrix_RF <- function(object,
   }
 
   ### get binary matrix ###
-  binary <- D[rules$gene1, ] < D[rules$gene2, ]
+  binary <- D[rules$gene1, ,drop=FALSE] < D[rules$gene2, ,drop=FALSE]
   rownames(binary) <- paste0(rules$gene1,"__",rules$gene2)
   binary <- as.data.frame(t(binary))
 
