@@ -40,7 +40,7 @@ library(BiocStyle)
 library(knitr)
 ```
 
-In this tutorial we show how to use the different functions and options in `multiclassPairs` package (v`r packageVersion("multiclassPairs")`), including training a pairs-based classifier, predict classes in test data, and visualize the prediction scores and rules.
+In this tutorial we show how to use the different functions and options in `multiclassPairs` package (v`r packageVersion("multiclassPairs")`), including training a pair-based classifier, predict classes in test data, and visualize the prediction scores and rules.
 
 # Installation
 
@@ -84,7 +84,7 @@ The workflow in `multiclassPairs` is summarized in the next figure:
 knitr::include_graphics("images/workflow_v0_3.png")
 ```
 
-The workflow always starts with `ReadData` function. Then you have two schemes to train your pairs-based classifier:
+The workflow always starts with `ReadData` function. Then you have two schemes to train your pair-based classifier:
 
 - First option is a one-vs-rest scheme that assemble one-vs-rest binary classifiers built by 'switchBox' package which uses Top-score pairs (TSP) algorithm. 
 - The second option is a scheme based on a novel implementation of the random forest (RF) algorithm.
@@ -185,7 +185,7 @@ knitr::include_graphics("images/one_vs_rest_scheme.png")
 ```
 
 ## Gene filtering
-For building a pairs-based classifier with a one-vs-rest scheme, 
+For building a pair-based classifier with a one-vs-rest scheme, 
 we start by selecting top differentially expressed genes using the `filter_genes_TSP` function. This reduces the number of gene combinations (rules) in the next steps. This function can perform the filtering in different ways and return the top differential expressed genes for each class. 
 
 `filter_genes_TSP` function provides two options for gene filtering. Both options begins by ranking the data (i.e. in-sample ranking). The first option performs one-vs-rest comparison using Wilcoxon test and then selects a number of the top genes. Wilcoxon test is done separately for each class. The second option performs one-vs-one comparison using Dunn's test, and then selects a number of the top genes. Dunn's test is performed for all classes together.
