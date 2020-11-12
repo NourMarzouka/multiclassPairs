@@ -479,7 +479,7 @@ plot_binary_TSP(Data = object, # we are using the data object here
                 title = "Training data")
 ```
 
-<img src="figure/unnamed-chunk-14-1.png" title="plot of chunk unnamed-chunk-14" alt="plot of chunk unnamed-chunk-14" style="display: block; margin: auto;" />
+<img src="/vignettes/figure/unnamed-chunk-14-1.png" title="plot of chunk unnamed-chunk-14" alt="plot of chunk unnamed-chunk-14" style="display: block; margin: auto;" />
 
 ```r
 # plot for the rules and scores in the testing data
@@ -493,7 +493,7 @@ plot_binary_TSP(Data = test, # ExpressionSet
                 )
 ```
 
-<img src="figure/unnamed-chunk-14-2.png" title="plot of chunk unnamed-chunk-14" alt="plot of chunk unnamed-chunk-14" style="display: block; margin: auto;" />
+<img src="/vignettes/figure/unnamed-chunk-14-2.png" title="plot of chunk unnamed-chunk-14" alt="plot of chunk unnamed-chunk-14" style="display: block; margin: auto;" />
 
 # Random Forest scheme
 
@@ -703,7 +703,7 @@ proximity_matrix_RF(object = object,
              cluster_cols = TRUE)
 ```
 
-<img src="figure/unnamed-chunk-19-1.png" title="plot of chunk unnamed-chunk-19" alt="plot of chunk unnamed-chunk-19" style="display: block; margin: auto;" />
+<img src="/vignettes/figure/unnamed-chunk-19-1.png" title="plot of chunk unnamed-chunk-19" alt="plot of chunk unnamed-chunk-19" style="display: block; margin: auto;" />
 
 ## Training Accuracy
 
@@ -858,7 +858,7 @@ plot_binary_RF(Data = object,
                title = "Training data")
 ```
 
-<img src="figure/unnamed-chunk-24-1.png" title="plot of chunk unnamed-chunk-24" alt="plot of chunk unnamed-chunk-24" style="display: block; margin: auto;" />
+<img src="/vignettes/figure/unnamed-chunk-24-1.png" title="plot of chunk unnamed-chunk-24" alt="plot of chunk unnamed-chunk-24" style="display: block; margin: auto;" />
 
 ```r
 # visualize the binary rules in testing dataset
@@ -873,7 +873,7 @@ plot_binary_RF(Data = test,
                title = "Testing data")
 ```
 
-<img src="figure/unnamed-chunk-24-2.png" title="plot of chunk unnamed-chunk-24" alt="plot of chunk unnamed-chunk-24" style="display: block; margin: auto;" />
+<img src="/vignettes/figure/unnamed-chunk-24-2.png" title="plot of chunk unnamed-chunk-24" alt="plot of chunk unnamed-chunk-24" style="display: block; margin: auto;" />
 
 # Session info
 
