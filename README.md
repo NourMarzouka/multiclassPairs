@@ -54,7 +54,7 @@ library(multiclassPairs)
 # Workflow
 
 The workflow in `multiclassPairs` is summarized in the next figure:
-<img src="images/workflow_v0_3.png" title="Workflow in multiclassPairs R package: Functions are colored in green." alt="Workflow in multiclassPairs R package: Functions are colored in green." style="display: block; margin: auto;" />
+<img src="/vignettes/images/workflow_v0_3.png" title="Workflow in multiclassPairs R package: Functions are colored in green." alt="Workflow in multiclassPairs R package: Functions are colored in green." style="display: block; margin: auto;" />
 
 The workflow always starts with `ReadData` function. Then you have two schemes to train your pairs-based classifier:
 
@@ -232,7 +232,7 @@ object
 # One-vs-rest scheme
 One-vs-rest scheme is composed from binary individual classifiers for each class (i.e. each class versus others). Each binary classifier votes (i.e. give a score) for the predicted sample, and the sample's class is predicted based on the highest score.
 
-<img src="images/one_vs_rest_scheme.png" title="One-vs-rest scheme" alt="One-vs-rest scheme" style="display: block; margin: auto;" />
+<img src="/vignettes/images/one_vs_rest_scheme.png" title="One-vs-rest scheme" alt="One-vs-rest scheme" style="display: block; margin: auto;" />
 
 ## Gene filtering
 For building a pairs-based classifier with a one-vs-rest scheme, 
@@ -240,11 +240,11 @@ we start by selecting top differentially expressed genes using the `filter_genes
 
 `filter_genes_TSP` function provides two options for gene filtering. Both options begins by ranking the data (i.e. in-sample ranking). The first option performs one-vs-rest comparison using Wilcoxon test and then selects a number of the top genes. Wilcoxon test is done separately for each class. The second option performs one-vs-one comparison using Dunn's test, and then selects a number of the top genes. Dunn's test is performed for all classes together.
 
-<img src="images/gene_filtering_TSP.png" title="Gene filtering options" alt="Gene filtering options" style="display: block; margin: auto;" />
+<img src="/vignettes/images/gene_filtering_TSP.png" title="Gene filtering options" alt="Gene filtering options" style="display: block; margin: auto;" />
 
 Previous filtering options can be done for samples from each platform/study separately, then the top genes in all platforms/studies will be selected.
 
-<img src="images/platform_wise_gene_filtering_TSP.png" title="Platform-wise gene filtering" alt="Platform-wise gene filtering" style="display: block; margin: auto;" />
+<img src="/vignettes/images/platform_wise_gene_filtering_TSP.png" title="Platform-wise gene filtering" alt="Platform-wise gene filtering" style="display: block; margin: auto;" />
 The reason for using one-vs-one gene filtering is to give more weight to small classes. The reason for using platform-wise gene filtering is to give more weight to platforms with small sample size, and to select genes that are important in all platforms/studies. However, one-vs-one and platform-wise options does not guarantee better results but they are valid options to be considered during the training process.
 
 More details about the filtering process is mentioned in the documentation of `filter_genes_TSP` function.
