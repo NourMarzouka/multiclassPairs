@@ -58,7 +58,7 @@ if (!requireNamespace("multiclassPairs", quietly = TRUE)) {
 #    install.packages("devtools")
 #  }
 #  library(devtools) # this package is needed to install from GitHub
-#  install_github("NourMarzouka/multiclassPairs")
+#  install_github("NourMarzouka/multiclassPairs", build_vignettes = TRUE)
 #}
 
 # Install the dependencies from Bioconductor
