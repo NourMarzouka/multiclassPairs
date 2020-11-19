@@ -1,3 +1,8 @@
+# multiclassPairs v0.4.0 (Release date: 2020-11-19)
+
+### changes
+* train_RF has optimized gene_repetition method
+
 # multiclassPairs v0.3.1 (Release date: 2020-11-16)
 
 ### changes

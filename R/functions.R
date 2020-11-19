@@ -2737,7 +2737,7 @@ sort_rules_RF <- function (data_object,
   object_tmp <- list(
     RF_scheme = list(sorted_genes=NULL,
                      sorted_rules=NULL,
-                     gene_repetition=NULL,
+                     #gene_repetition=NULL,
                      RF_classifiers=NULL,
                      calls=c()))
   class(object_tmp) <- "RandomForest_sorted_rules"
@@ -2849,11 +2849,11 @@ sort_rules_RF <- function (data_object,
                                           stringsAsFactors = FALSE)
 
       # get the repetition of the genes in the rules
-      times <- ave(times, times, FUN = seq_along)
-      gene_repetition[["all"]] <- data.frame(Gene1=times[1,],
-                                             Gene2=times[2,],
-                                             row.names = tmp,
-                                             stringsAsFactors = FALSE)
+      # times <- ave(times, times, FUN = seq_along)
+      #gene_repetition[["all"]] <- data.frame(Gene1=times[1,],
+      #                                       Gene2=times[2,],
+      #                                       row.names = tmp,
+      #                                       stringsAsFactors = FALSE)
 
       rm(tmp, times)
     }
@@ -2890,11 +2890,11 @@ sort_rules_RF <- function (data_object,
                                          stringsAsFactors = FALSE)
 
         # get the repetition of the genes in the rules
-        times <- ave(times, times, FUN = seq_along)
-        gene_repetition[[cl]] <- data.frame(Gene1=times[1,],
-                                            Gene2=times[2,],
-                                            row.names = tmp,
-                                            stringsAsFactors = FALSE)
+        # times <- ave(times, times, FUN = seq_along)
+        # gene_repetition[[cl]] <- data.frame(Gene1=times[1,],
+        #                                     Gene2=times[2,],
+        #                                     row.names = tmp,
+        #                                     stringsAsFactors = FALSE)
 
         rm(tmp, times)
       }
@@ -2902,7 +2902,7 @@ sort_rules_RF <- function (data_object,
 
     object_tmp$RF_scheme$sorted_genes    <- sorted_genes
     object_tmp$RF_scheme$sorted_rules    <- sorted_rules
-    object_tmp$RF_scheme$gene_repetition <- gene_repetition
+    #object_tmp$RF_scheme$gene_repetition <- gene_repetition
     object_tmp$RF_scheme$RF_classifiers  <- RF_classifiers
     object_tmp$RF_scheme$calls           <- param
     return(object_tmp)
@@ -3024,11 +3024,11 @@ sort_rules_RF <- function (data_object,
                                           stringsAsFactors = FALSE)
 
       # get the repetition of the genes in the rules
-      times <- ave(times, times, FUN = seq_along)
-      gene_repetition[["all"]] <- data.frame(Gene1=times[1,],
-                                             Gene2=times[2,],
-                                             row.names = tmp,
-                                             stringsAsFactors = FALSE)
+      # times <- ave(times, times, FUN = seq_along)
+      # gene_repetition[["all"]] <- data.frame(Gene1=times[1,],
+      #                                        Gene2=times[2,],
+      #                                        row.names = tmp,
+      #                                        stringsAsFactors = FALSE)
 
       rm(tmp, times)
     } # otherwise it is already NULL
@@ -3063,11 +3063,11 @@ sort_rules_RF <- function (data_object,
                                          stringsAsFactors = FALSE)
 
         # get the repetition of the genes in the rules
-        times <- ave(times, times, FUN = seq_along)
-        gene_repetition[[cl]] <- data.frame(Gene1=times[1,],
-                                            Gene2=times[2,],
-                                            row.names = tmp,
-                                            stringsAsFactors = FALSE)
+        # times <- ave(times, times, FUN = seq_along)
+        # gene_repetition[[cl]] <- data.frame(Gene1=times[1,],
+        #                                     Gene2=times[2,],
+        #                                     row.names = tmp,
+        #                                     stringsAsFactors = FALSE)
 
         rm(tmp, times)
 
@@ -3077,7 +3077,7 @@ sort_rules_RF <- function (data_object,
     # fill the object
     object_tmp$RF_scheme$sorted_genes       <- sorted_genes
     object_tmp$RF_scheme$sorted_rules       <- sorted_rules
-    object_tmp$RF_scheme$gene_repetition    <- gene_repetition
+    #object_tmp$RF_scheme$gene_repetition    <- gene_repetition
     object_tmp$RF_scheme$RF_classifiers     <- RF_classifiers
     object_tmp$RF_scheme$calls              <- param
     return(object_tmp)
@@ -3495,7 +3495,25 @@ train_RF <- function (data_object,
                      calls=c()))
   class(object_tmp) <- "rule_based_RandomForest"
 
+  ###
+  # function to check the gene repetition in the pairs
+  check_rep <- function(pairs, gene_repetition){
+    VecCheck <- unique(c(pairs[,1], pairs[,2]))
 
+    VecCheck <- setNames(rep(0,length(VecCheck)), VecCheck)
+
+    VecCheckReject <- c()
+
+    outX <- do.call("rbind", apply(pairs,1,function(x){
+      if(any(x %in% VecCheckReject)){
+        return()
+      }
+      VecCheck[x] <<- VecCheck[x] + 1
+      VecCheckReject <<- c(VecCheckReject, x[VecCheck[x]==gene_repetition])
+      return(x)
+    }))
+    return(outX)
+  }
   ###
   # get the wanted genes
   if (verbose) {
@@ -3519,15 +3537,19 @@ train_RF <- function (data_object,
       tmp <- sorted_rules_RF[[1]]$sorted_rules$all
       #tmp <- matrix(unlist(strsplit(tmp, "__")), nrow = 2, byrow = FALSE)
 
+      # here
+      # get the repetition of the genes in the rules
+      tmp <- check_rep(pairs = tmp, gene_repetition = gene_repetition)
+
       # get the repetition of the genes in the rules
       #times <- ave(tmp, tmp, FUN = seq_along)
-      times <- sorted_rules_RF[[1]]$gene_repetition$all
+      # times <- sorted_rules_RF[[1]]$gene_repetition$all
 
       # keep only genes repeated specific number of times
-      keep <- as.integer(times[,1]) <= gene_repetition &
-        as.integer(times[,2]) <= gene_repetition
+      #keep <- as.integer(times[,1]) <= gene_repetition &
+      #  as.integer(times[,2]) <= gene_repetition
 
-      tmp <- tmp[keep, , drop=FALSE]
+      # tmp <- tmp[keep, , drop=FALSE]
 
       # let the user know how many rules we collected from all
       if (verbose) {
@@ -3567,15 +3589,19 @@ train_RF <- function (data_object,
       tmp <- sorted_rules_RF[[1]]$sorted_rules[[cl]]
       #tmp <- matrix(unlist(strsplit(tmp, "__")), nrow = 2, byrow = FALSE)
 
+      # here
+      # get the repetition of the genes in the rules
+      tmp <- check_rep(pairs = tmp, gene_repetition = gene_repetition)
+
       # get the repetition of the genes in the rules
       #times <- ave(tmp, tmp, FUN = seq_along)
-      times <- sorted_rules_RF[[1]]$gene_repetition[[cl]]
+      # times <- sorted_rules_RF[[1]]$gene_repetition[[cl]]
 
       # keep only genes repeated specific number of times
-      keep <- as.integer(times[,1]) <= gene_repetition &
-        as.integer(times[,2]) <= gene_repetition
+      #keep <- as.integer(times[,1]) <= gene_repetition &
+      #  as.integer(times[,2]) <= gene_repetition
 
-      tmp <- tmp[keep, , drop=FALSE]
+      #tmp <- tmp[keep, , drop=FALSE]
 
       # let the user know how many rules we collected from all
       if (verbose) {
