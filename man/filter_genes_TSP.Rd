@@ -98,7 +98,7 @@ object <- ReadData(Data = Data,
 # training
 # classifier <- train_one_vs_rest_TSP(data_object = object,
 #                              filtered_genes = filtered_genes,
-#                              k_range = 2:50,
+#                              k_range = 10:50,
 #                              include_pivot = FALSE,
 #                              one_vs_one_scores = FALSE,
 #                              platform_wise_scores = FALSE,

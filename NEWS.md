@@ -1,3 +1,12 @@
+# multiclassPairs v0.4.1 (Release date: 2021-01-26)
+
+### minor changes 
+* minor change in rule_based_RandomForest print method
+* default of k_range in train_one_vs_rest_TSP set to 10:50 instead of 2:50
+* default of genes_altogether and genes_one_vs_rest in sort_rules_RF set to 50 instead of 200
+* default of rules_altogether and rules_one_vs_rest in train_RF set to 50 instead of 200
+* Update the tutorial with time and accuracy comparisons
+
 # multiclassPairs v0.4.0 (Release date: 2020-11-19)
 
 ### changes

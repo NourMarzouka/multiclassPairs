@@ -939,7 +939,7 @@ filter_genes_TSP <- function(data_object,
 # train one vs rest scheme using SB
 train_one_vs_rest_TSP <- function(data_object,
                                   filtered_genes,
-                                  k_range=2:50,
+                                  k_range=10:50,
                                   include_pivot=FALSE,
                                   one_vs_one_scores=FALSE,
                                   platform_wise_scores=FALSE,
@@ -2594,8 +2594,8 @@ summary_genes_RF <- function(sorted_genes_RF,
 # rules filtering using RF
 sort_rules_RF <- function (data_object,
                            sorted_genes_RF,
-                           genes_altogether = 200,
-                           genes_one_vs_rest = 200,
+                           genes_altogether = 50,
+                           genes_one_vs_rest = 50,
                            run_altogether = TRUE,
                            run_one_vs_rest = TRUE,
                            platform_wise = FALSE,
@@ -3355,8 +3355,8 @@ train_RF <- function (data_object,
                       sorted_rules_RF,
 
                       gene_repetition = 1,
-                      rules_altogether = 200,
-                      rules_one_vs_rest = 200,
+                      rules_altogether = 50,
+                      rules_one_vs_rest = 50,
 
                       run_boruta = FALSE,
                       plot_boruta = FALSE,
@@ -5422,7 +5422,8 @@ print.rule_based_RandomForest <- function(x, ...) {
                      replacement = ",\n            "))
           }
 
-          if (i == "RF_classifier"| i== "boruta" | i== "mode") {
+          if (i == "RF_classifier"| i== "boruta"  | i=="TrainingMatrix") {
+            #| i== "mode"
             cat("\n")
           }
 

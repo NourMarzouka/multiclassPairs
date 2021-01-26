@@ -9,8 +9,8 @@ Create and sort feature/gene pairs for pair-based random forest classifier train
 \usage{
 sort_rules_RF(data_object,
              sorted_genes_RF,
-             genes_altogether = 200,
-             genes_one_vs_rest = 200,
+             genes_altogether = 50,
+             genes_one_vs_rest = 50,
              run_altogether = TRUE,
              run_one_vs_rest = TRUE,
              platform_wise = FALSE,
