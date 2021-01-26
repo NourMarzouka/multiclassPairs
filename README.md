@@ -1,6 +1,6 @@
 Tutorial for multiclassPairs R package
 ================
-true
+
 Created: 26/01/2021
 
 <!-- badges: start -->
