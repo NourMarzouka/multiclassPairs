@@ -3,21 +3,6 @@ Tutorial for multiclassPairs R package
 true
 Created: 26/01/2021
 
-<script type="text/javascript">
-document.addEventListener("DOMContentLoaded", function() {
-  document.querySelector("h1").className = "title";
-});
-</script>
-<script type="text/javascript">
-document.addEventListener("DOMContentLoaded", function() {
-  var links = document.links;  
-  for (var i = 0, linksLength = links.length; i < linksLength; i++)
-    if (links[i].hostname != window.location.hostname)
-      links[i].target = '_blank';
-});
-</script>
-
-# multiclassPairs
 <!-- badges: start -->
 [![CRAN
 status](https://www.r-pkg.org/badges/version/multiclassPairs)](https://www.r-pkg.org/badges/version/multiclassPairs)
