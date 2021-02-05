@@ -18,7 +18,13 @@ Description: A toolbox to train a single sample classifier that uses in-sample f
 author:
   - name: "By Nour-al-dain Marzouka"
     email: "nour-al-dain.marzouka@med.lu.se"
-	
+
+# Citation
+Marzouka N, Eriksson P (2021). _multiclassPairs: An R package to train multiclass
+pair-based classifier_. Bioinformatics. doi: 10.1093/bioinformatics/btab088 (URL:
+https://doi.org/10.1093/bioinformatics/btab088).
+
+# Tutorial
 In this tutorial we show how to use the different functions and options
 in `multiclassPairs` package (v0.4.1), including training a pair-based
 classifier, predict classes in test data, and visualize the prediction
