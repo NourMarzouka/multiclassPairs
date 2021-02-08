@@ -19,7 +19,7 @@ Authors:
   - "Nour-al-dain Marzouka and Pontus Eriksson"    
   
 Maintainer:
-  - name: "Nour-al-dain Marzouka"
+  - "Nour-al-dain Marzouka"
     email: "nour-al-dain.marzouka@med.lu.se"
   
 # Citation
