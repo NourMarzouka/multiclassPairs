@@ -1,7 +1,7 @@
 Tutorial for multiclassPairs R package
 ================
 
-Created: 26/01/2021
+Created: 16/05/2021
 
 <!-- badges: start -->
 [![CRAN
