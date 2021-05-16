@@ -84,7 +84,7 @@ proximity_matrix_RF(object,
 }
 
 \examples{# generate random data
-Data <- matrix(runif(10000), nrow=100, ncol=80,
+Data <- matrix(runif(8000), nrow=100, ncol=80,
                dimnames = list(paste0("G",1:100), paste0("S",1:80)))
 
 # generate random labels

@@ -1,3 +1,6 @@
+# multiclassPairs v0.4.3 (Release date: 2021-05-16)
+### minor CRAN fixes
+
 # multiclassPairs v0.4.1 (Release date: 2021-01-26)
 
 ### minor changes 

@@ -119,7 +119,7 @@ Nour-al-dain Marzouka <nour-al-dain.marzouka at med.lu.se>
 
 \examples{
 # random data
-Data <- matrix(runif(100000), nrow=100, ncol=100,
+Data <- matrix(runif(10000), nrow=100, ncol=100,
                dimnames = list(paste0("G",1:100), paste0("S",1:100)))
 
 # labels

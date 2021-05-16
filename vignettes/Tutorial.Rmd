@@ -106,7 +106,7 @@ library(multiclassPairs)
 # example of creating data object from matrix
 # we will generate fake data in this example
 # matrix with random values
-Data <- matrix(runif(100000), 
+Data <- matrix(runif(10000), 
                nrow=100, 
                ncol=100, 
                dimnames = list(paste0("G",1:100), 
