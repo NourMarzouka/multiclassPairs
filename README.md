@@ -20,7 +20,7 @@ Authors:
   
 Maintainer:
   - "Nour-al-dain Marzouka"
-    email: "nour-al-dain.marzouka@med.lu.se"
+    email: "nour.marzouka@ku.ac.ae"
   
 # Citation
 Marzouka N, Eriksson P (2021). _multiclassPairs: An R package to train multiclass
