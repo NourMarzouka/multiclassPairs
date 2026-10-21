@@ -237,14 +237,26 @@ do_dunn_test <- function(data,
     stop("Provide rownames for Data matrix!")
   }
 
-  p_values <- lapply(1:nrow(data), function(x) {
+  # Dunn's test is undefined when a feature contains non-finite values
+  # or has no rank variation.  The latter includes constant features after
+  # ranking (not only all-zero features).
+  valid <- apply(data, 1, function(x) {
+    all(is.finite(x)) && length(unique(x)) > 1
+  })
+
+  if (any(!valid)) {
+    message(sum(!valid), " feature(s) skipped before Dunn.test because the",
+            " test statistic is undefined for them.")
+  }
+
+  p_values <- lapply(which(valid), function(x) {
     dunn.test(
       x = as.numeric(data[x,]),
       g = data_labels,
       method = correction_method)
   })
 
-  names(p_values) <- rownames(data)
+  names(p_values) <- rownames(data)[valid]
 
   return(p_values)
 }
@@ -546,6 +558,10 @@ filter_genes_TSP <- function(data_object,
       message("Performing Dunn.test...")
     }
     tmp <- do_dunn_test(data = D_ranked, data_labels = L)
+
+    if (length(tmp) == 0) {
+      stop("Dunn.test cannot be performed: no feature has finite values and rank variation.")
+    }
 
     # get the length of the pairwise comparison
     len_com <- length(tmp[[1]]$comparisons)

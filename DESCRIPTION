@@ -11,7 +11,7 @@ Encoding: UTF-8
 biocViews: Classification
 Depends: R (>= 4.0.0)
 Imports: methods, utils, stats, graphics, grDevices, ranger, Boruta, dunn.test, caret, e1071, rdist
-Suggests: BiocManager, Biobase, switchBox, knitr, rmarkdown, BiocStyle, leukemiasEset, qpdf
+Suggests: BiocManager, Biobase, switchBox, knitr, rmarkdown, BiocStyle, leukemiasEset, qpdf, testthat
 LazyData: true
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
