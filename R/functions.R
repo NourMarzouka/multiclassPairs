@@ -3684,6 +3684,14 @@ train_RF <- function (data_object,
     args_bor <- list(x = t(binary),
                      y =  factor(L, levels = unique(L)))
     args_bor  <- c(args_bor, boruta_args)
+
+    # Boruta 10.0.0 changed its default importance backend from ranger
+    # to fru. Keep the historical ranger-based behavior unless the user
+    # explicitly supplies a different getImp adapter.
+    if (is.null(args_bor$getImp)) {
+      args_bor$getImp <- Boruta::getImpRfZ
+    }
+
     out <- do.call(Boruta, args_bor)
 
     # let the user know how many rules left
